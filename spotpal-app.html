@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>搭趣 SpotPal · 设计稿还原应用</title>
+<style>
+/* ============================================================
+   设计 Token —— 全部提取自 Ardot 画布 723889208012364「搭趣App原型」
+   屏幕尺寸 390×844 · 卡片 18px 圆角 · 1px #E0E0E0 细边框无阴影
+   ============================================================ */
+:root{
+  --blue:#0066CC;            /* 品牌蓝 r0 g0.4 b0.8 */
+  --blue-lt:#29A3FF;         /* 暗卡亮蓝 r0.16 g0.59 b1 */
+  --badge-blue-bg:#E8F1FF;   /* 浅蓝徽章底 r0.91 g0.945 b0.984 */
+  --ink:#1D1D1F;             /* 主文字 r0.114 g0.114 b0.122 */
+  --sub:#86868B;             /* 次文字 r0.478 g0.478 b0.478 */
+  --dark-card:#272729;       /* 暗卡 r0.153 g0.153 b0.161 */
+  --dark-sub:#999999;       /* 暗卡次文字 r0.6 g0.6 b0.6 */
+  --dark-track:#3A3A3C;      /* 暗卡轨道 r0.227 g0.227 b0.235 */
+  --ai-text:#333333;         /* AI 理由文字 r0.2 g0.2 b0.2 */
+  --green:#34C759;           /* 成功绿 r0.204 g0.78 b0.349 */
+  --bg:#F5F5F7;              /* 屏幕底 / 浅灰条 r0.961 g0.961 b0.969 */
+  --border:#E0E0E0;          /* 卡片描边 r0.878 g0.878 b0.878 */
+  --sep:#F0F0F0;             /* 明细分隔线 r0.941 g0.941 b0.941 */
+  --on-dark:#CCCCCC;         /* 暗卡正文 r0.8 g0.8 b0.8 */
+  --radius-card:18px;
+  --radius-inner:11px;
+  --font:Inter,-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+html,body{height:100%}
+body{
+  font-family:var(--font);
+  background:#E9E9EE;
+  background-image:radial-gradient(1200px 600px at 50% -10%,#F2F2F6 0%,#E4E4EA 60%,#DBDBE3 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;overflow:hidden;
+}
+/* ---------- 舞台与设备外壳 ---------- */
+.stage{display:flex;flex-direction:column;align-items:center;gap:22px}
+.device{
+  width:390px;height:844px;background:var(--bg);
+  border-radius:54px;border:11px solid #1B1B1F;
+  box-shadow:0 2px 8px rgba(0,0,0,.18),0 30px 80px rgba(0,0,0,.28),inset 0 0 0 2px #3C3C42;
+  position:relative;overflow:hidden;flex-shrink:0;
+}
+.caption{color:#6C6C74;font-size:13px;letter-spacing:.4px}
+.caption b{color:var(--ink);font-weight:600}
+/* ---------- 屏幕层 ---------- */
+.screen{
+  position:absolute;inset:0;background:var(--bg);
+  display:none;flex-direction:column;overflow:hidden;
+}
+.screen.active{display:flex}
+.screen.push-in{animation:pushIn .32s cubic-bezier(.32,.72,.35,1)}
+.screen.fade-in{animation:fadeIn .22s ease}
+@keyframes pushIn{from{transform:translateX(60px);opacity:.4}to{transform:translateX(0);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+/* ---------- 状态栏（每屏 padding 24/24/10/10 · 高 62）---------- */
+.statusbar{
+  height:62px;min-height:62px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 24px 10px 24px;
+}
+.sb-time{font-family:Inter,sans-serif;font-weight:600;font-size:16px;color:var(--ink);letter-spacing:.2px}
+.sb-icons{display:flex;align-items:center;gap:6px}
+.sb-icons svg{display:block}
+/* ---------- 滚动内容区 ---------- */
+.scroll{
+  flex:1;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-width:none;
+}
+.scroll::-webkit-scrollbar{display:none}
+/* ---------- 底部标签栏（390×95 · 胶囊 62 · 圆角 36）---------- */
+.tabbar{
+  min-height:95px;display:flex;align-items:flex-start;padding:12px 21px 0 21px;position:relative;
+}
+.tabbar-pill{
+  width:100%;height:62px;background:#fff;border:1px solid var(--border);
+  border-radius:36px;display:flex;padding:4px;gap:0;
+}
+.tab{
+  flex:1;border-radius:26px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  cursor:pointer;user-select:none;transition:background .18s ease;
+  border:none;background:transparent;font-family:var(--font);
+}
+.tab .tab-label{font-size:10px;color:var(--sub);font-weight:400;line-height:1}
+.tab .tab-label{font-family:"Noto Sans SC",var(--font)}
+.tab svg{display:block}
+.tab svg *{transition:stroke .18s ease,fill .18s ease}
+.tab.active{background:var(--blue)}
+.tab.active .tab-label{color:#fff;font-weight:500}
+.home-indicator{
+  position:absolute;left:50%;bottom:8px;transform:translateX(-50%);
+  width:134px;height:5px;border-radius:3px;background:var(--ink);opacity:.9;
+}
+/* ---------- 通用卡片 ---------- */
+.card{
+  background:#fff;border:1px solid var(--border);border-radius:var(--radius-card);
+}
+.pill{border-radius:9999px}
+/* ---------- 发现页 ---------- */
+.hd-loc{display:flex;align-items:center;justify-content:space-between}
+.loc{display:flex;align-items:center;gap:6px}
+.loc b{font-size:15px;font-weight:500;color:var(--ink);letter-spacing:.2px}
+.searchbar{
+  height:44px;background:#fff;border:1px solid var(--border);border-radius:9999px;
+  display:flex;align-items:center;gap:8px;padding:0 16px;cursor:text;
+}
+.searchbar span{font-size:15px;color:var(--sub);font-weight:400}
+.filter-row{display:flex;gap:8px;padding:0 20px 12px 20px;overflow-x:auto;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.ftag{
+  padding:7px 14px;border-radius:9999px;white-space:nowrap;cursor:pointer;user-select:none;
+  font-size:13px;color:var(--ink);background:#fff;border:1px solid var(--border);font-weight:400;
+  transition:all .18s ease;
+}
+.ftag.active{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:500}
+.rec-list{display:flex;flex-direction:column;gap:12px;padding:2px 20px 24px 20px}
+.rec-card{
+  display:flex;gap:12px;padding:14px;cursor:pointer;transition:transform .15s ease;
+}
+.rec-card:active{transform:scale(.98)}
+.avatar{border-radius:9999px;flex-shrink:0}
+.rec-card .avatar{width:64px;height:64px}
+.g-blue{background:linear-gradient(180deg,#669EEF 0%,#2E66CC 100%)}
+.g-orange{background:linear-gradient(180deg,#F2C784 0%,#D98047 100%)}
+.g-green{background:linear-gradient(180deg,#8CD9A6 0%,#339973 100%)}
+.g-dark{background:var(--ink)}
+.rec-body{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.rec-name{display:flex;align-items:baseline;gap:8px}
+.rec-name .n{display:flex;align-items:baseline;gap:6px;min-width:0}
+.rec-name b{font-size:16px;font-weight:500;color:var(--ink)}
+.rec-name .age{font-family:Inter,sans-serif;font-size:13px;color:var(--sub)}
+.rec-name .match{margin-left:auto;font-family:Inter,sans-serif;font-size:15px;font-weight:600;color:var(--blue)}
+.ai-reason{
+  background:var(--bg);border-radius:var(--radius-inner);padding:8px 10px;
+  display:flex;align-items:center;gap:6px;
+}
+.ai-reason p{font-size:12px;color:var(--ai-text);font-weight:400;line-height:1.45}
+.rec-attr{display:flex;align-items:center;gap:6px}
+.rec-attr .dist{display:flex;align-items:center;gap:4px}
+.rec-attr .dist p{font-size:12px;color:var(--sub)}
+.rec-attr .act{margin-left:auto;font-size:12px;color:var(--sub)}
+/* ---------- 搭子主页 ---------- */
+.back-row{display:flex;align-items:center;position:relative;padding:4px 20px 8px 20px;height:32px}
+.back-row .title{position:absolute;left:50%;transform:translateX(-50%);font-size:16px;font-weight:500;color:var(--ink)}
+.icon-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer}
+.back-row .icon-btn:last-child{margin-left:auto}
+.profile-head{display:flex;gap:14px;padding:8px 20px 0 20px}
+.profile-head .avatar{width:76px;height:76px}
+.p-head-info{flex:1;display:flex;flex-direction:column;gap:6px;padding-top:4px}
+.p-head-info b{font-size:22px;font-weight:500;color:var(--ink)}
+.p-head-info p{font-size:13px;color:var(--sub)}
+.badge-row{display:flex;gap:6px}
+.vbadge{
+  display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:9999px;
+  padding:4px 10px;font-size:11px;color:var(--sub);font-weight:400;
+}
+.vbadge.verified{color:var(--blue);font-weight:500}
+.stats-row{display:flex;padding:16px 20px}
+.stat{flex:1;display:flex;flex-direction:column;gap:2px;align-items:flex-start}
+.stat b{font-family:Inter,sans-serif;font-size:18px;font-weight:600;color:var(--ink)}
+.stat p{font-size:12px;color:var(--sub)}
+.ai-card{
+  margin:0 20px;background:var(--dark-card);border-radius:var(--radius-card);padding:16px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.ai-card-head{display:flex;align-items:center;gap:6px}
+.ai-card-head b{font-size:14px;font-weight:500;color:#fff}
+.ai-card hr{border:none;height:1px;background:rgba(255,255,255,.9)}
+.ai-card p{font-size:14px;line-height:22px;color:var(--on-dark);font-weight:400}
+.sec{padding:16px 20px 8px 20px;display:flex;flex-direction:column;gap:10px}
+.sec-title{font-size:15px;font-weight:500;color:var(--ink)}
+.tag-wrap{display:flex;flex-wrap:wrap;gap:8px}
+.ctag{
+  height:31px;display:flex;align-items:center;padding:7px 12px;border-radius:9999px;
+  font-size:12px;background:#fff;white-space:nowrap;
+}
+.ctag.blue{border:1px solid var(--blue);color:var(--blue)}
+.ctag.gray{border:1px solid var(--border);color:var(--sub)}
+.fee-card{margin:0 20px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.fee-head{display:flex;align-items:center;gap:8px}
+.fee-head b{font-size:14px;font-weight:500;color:var(--ink)}
+.fee-tags{display:flex;gap:8px}
+.ftag2{
+  display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:var(--radius-inner);
+  background:var(--bg);font-size:12px;color:var(--sub);cursor:pointer;user-select:none;transition:all .15s ease;
+}
+.ftag2.sel{color:var(--blue);font-weight:500}
+.bottom-bar{display:flex;gap:10px;padding:12px 20px 30px 20px}
+.btn-block{
+  width:54px;height:54px;border-radius:27px;background:#fff;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform .15s ease;
+}
+.btn-primary{
+  flex:1;height:54px;border-radius:27px;background:var(--blue);border:none;cursor:pointer;
+  color:#fff;font-size:16px;font-weight:500;font-family:var(--font);transition:transform .15s ease, opacity .15s ease;
+}
+.btn-primary:active{transform:scale(.97)}
+/* ---------- AI 协商页 ---------- */
+.ng-head{display:flex;align-items:center;padding:4px 20px 10px 20px}
+.ng-title{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:2px}
+.ng-title b{font-size:16px;font-weight:500;color:var(--ink)}
+.ng-title p{font-size:12px;color:var(--sub)}
+.ng-progress{display:flex;flex-direction:column;gap:8px;padding:0 20px 12px 20px}
+.ng-progress .lab{display:flex;align-items:center;gap:8px}
+.ng-progress .lab b{font-size:12px;font-weight:500;color:var(--blue)}
+.track{height:4px;border-radius:2px;background:var(--border);overflow:hidden}
+.track .fill{height:100%;border-radius:2px;background:var(--blue);transition:width .5s cubic-bezier(.32,.72,.35,1)}
+.sys-tip{display:flex;justify-content:center;padding:0 20px}
+.sys-tip span{
+  background:#fff;border:1px solid var(--border);border-radius:9999px;padding:6px 14px;
+  font-size:11px;color:var(--sub);
+}
+.chat{display:flex;flex-direction:column;gap:14px;padding:12px 20px}
+.bubble{width:264px;border-radius:var(--radius-card);padding:14px;display:flex;flex-direction:column;gap:10px}
+.bubble.ai{background:#fff;border:1px solid var(--border)}
+.bubble.ai.ok{border-color:var(--blue)}
+.bubble.sum{background:var(--dark-card)}
+.msg-head{display:flex;align-items:center;gap:6px}
+.msg-head span{font-size:11px;color:var(--sub)}
+.msg-head span.blue{color:var(--blue);font-weight:500}
+.msg-body{font-size:14px;line-height:22px;color:var(--ink);font-weight:400}
+.opt{height:40px;border-radius:var(--radius-inner);background:var(--bg);display:flex;align-items:center;gap:0;padding:0 12px;cursor:pointer;transition:all .15s ease}
+.opt p{font-size:13px;color:var(--ink)}
+.opt .ck{margin-left:auto}
+.bubble.user-row{width:100%;background:none;border:none;padding:0;border-radius:0}
+.user-msg{align-self:flex-end;background:var(--blue);border-radius:var(--radius-card);padding:12px 16px}
+.user-msg p{color:#fff;font-size:14px;font-weight:400}
+.sum-row{display:flex;gap:8px}
+.sum-row .k{width:36px;font-size:12px;color:var(--dark-sub);flex-shrink:0}
+.sum-row .v{flex:1;font-size:13px;color:#fff;font-weight:500}
+.input-bar{display:flex;gap:10px;align-items:center;padding:10px 20px 30px 20px}
+.voice-btn{width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.input-bar input{
+  flex:1;height:40px;border-radius:20px;border:1px solid var(--border);background:#fff;
+  padding:0 14px;font-size:14px;color:var(--ink);outline:none;font-family:var(--font);
+}
+.input-bar input::placeholder{color:var(--sub)}
+.send-btn{
+  width:36px;height:36px;border-radius:18px;background:var(--blue);border:none;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:transform .15s ease;
+}
+.send-btn:active{transform:scale(.92)}
+/* ---------- 搭局确认页 ---------- */
+.plan-card{padding:18px;display:flex;flex-direction:column;gap:14px;margin:0 0 14px 0}
+.plan-head{display:flex;align-items:center}
+.plan-head b{font-size:18px;font-weight:500;color:var(--ink)}
+.pbadge{
+  margin-left:auto;background:var(--badge-blue-bg);border-radius:9999px;padding:4px 10px;
+  font-size:11px;color:var(--blue);font-weight:500;flex-shrink:0;
+}
+.plan-row{display:flex;align-items:center;gap:10px}
+.plan-row p{font-size:14px;color:var(--ink);font-weight:400}
+.fee-detail{padding:18px;display:flex;flex-direction:column;gap:12px;margin:0 0 14px 0}
+.fee-d-head{display:flex;align-items:center}
+.fee-d-head b{font-size:15px;font-weight:500;color:var(--ink)}
+.fee-d-head span{margin-left:auto;font-size:11px;color:var(--sub)}
+.fee-line{display:flex;justify-content:space-between}
+.fee-line .k{font-size:14px;color:var(--sub)}
+.fee-line .v{font-size:14px;color:var(--ink)}
+.fee-line.total .k,.fee-line.total .v{font-weight:500}
+.perhead{
+  background:var(--bg);border-radius:var(--radius-inner);padding:10px 12px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.perhead .k{font-size:13px;color:var(--blue);font-weight:500}
+.perhead .v{font-family:Inter,sans-serif;font-size:16px;font-weight:600;color:var(--blue)}
+.people-card{padding:18px;display:flex;flex-direction:column;gap:12px}
+.people-card>b{font-size:15px;font-weight:500;color:var(--ink)}
+.prow{display:flex;align-items:center;gap:10px}
+.prow .avatar{width:40px;height:40px}
+.prow b{flex:1;font-size:14px;font-weight:500;color:var(--ink)}
+.prow .st{font-size:12px;color:var(--green);font-weight:500}
+.notice{
+  background:var(--bg);border-radius:var(--radius-inner);padding:10px 12px;
+  display:flex;align-items:center;gap:6px;
+}
+.notice p{font-size:12px;color:var(--sub)}
+.confirm-bar{display:flex;flex-direction:column;gap:10px;padding:10px 20px 30px 20px}
+.btn-ghost{
+  height:44px;border-radius:22px;background:#fff;border:1px solid var(--border);cursor:pointer;
+  font-size:14px;color:var(--sub);font-family:var(--font);transition:transform .15s ease;
+}
+.btn-ghost:active{transform:scale(.97)}
+/* ---------- 我的搭局页 ---------- */
+.page-title-row{display:flex;align-items:center;padding:4px 20px 12px 20px}
+.page-title-row b{font-size:22px;font-weight:500;color:var(--ink)}
+.page-title-row .icon-btn{margin-left:auto}
+.seg{display:flex;padding:0 20px 14px 20px}
+.seg-pill{
+  width:100%;height:36px;background:#fff;border:1px solid var(--border);border-radius:9999px;
+  display:flex;padding:3px;gap:0;
+}
+.seg-item{
+  flex:1;border-radius:9999px;display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:var(--sub);cursor:pointer;user-select:none;transition:all .18s ease;font-weight:400;
+  border:none;background:transparent;font-family:var(--font);
+}
+.seg-item.active{background:var(--ink);color:#fff;font-weight:500}
+.match-list{display:flex;flex-direction:column;gap:14px;padding:0 20px 20px 20px}
+.ongoing{padding:18px;display:flex;flex-direction:column;gap:14px}
+.ongoing .head{display:flex;align-items:center}
+.ongoing .head b{font-size:17px;font-weight:500;color:var(--ink)}
+.mrow{display:flex;align-items:center;gap:10px}
+.mrow p{font-size:13px;color:var(--sub)}
+.avstack{display:flex}
+.avstack .avatar{width:28px;height:28px;border:2px solid #fff}
+.avstack .avatar+.avatar{margin-left:-8px}
+.btn-mid{
+  height:42px;border-radius:21px;background:var(--blue);border:none;cursor:pointer;
+  color:#fff;font-size:14px;font-weight:500;font-family:var(--font);transition:transform .15s ease;
+}
+.btn-mid:active{transform:scale(.97)}
+.group-title{font-size:15px;font-weight:500;color:var(--ink)}
+.hist-card{display:flex;gap:12px;padding:14px;align-items:center}
+.hist-card .avatar{width:44px;height:44px}
+.hist-body{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+.hist-body b{font-size:14px;font-weight:500;color:var(--ink)}
+.hist-body p{font-size:12px;color:var(--sub)}
+.hist-score{font-family:Inter,sans-serif;font-size:14px;font-weight:600;color:var(--ink);flex-shrink:0}
+.go-confirm{
+  background:var(--blue);border-radius:9999px;padding:8px 14px;color:#fff;font-size:12px;font-weight:500;
+  border:none;cursor:pointer;flex-shrink:0;align-self:center;transition:transform .15s ease;font-family:var(--font);
+}
+.go-confirm:active{transform:scale(.94)}
+/* ---------- 我的页 ---------- */
+.me-card{display:flex;gap:14px;padding:0 20px 16px 20px;align-items:center}
+.me-card .avatar{width:64px;height:64px}
+.me-info{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.me-info b{font-size:20px;font-weight:500;color:var(--ink)}
+.me-info p{font-size:13px;color:var(--sub)}
+.edit-pill{
+  align-self:flex-start;display:flex;align-items:center;gap:4px;background:#fff;
+  border:1px solid var(--border);border-radius:9999px;padding:5px 12px;cursor:pointer;
+}
+.edit-pill span{font-size:11px;color:var(--sub)}
+.credit-wrap{padding:0 20px 14px 20px}
+.credit{background:var(--dark-card);border-radius:var(--radius-card);padding:18px;display:flex;flex-direction:column;gap:12px}
+.credit-head{display:flex;align-items:baseline}
+.credit-head b{font-size:14px;font-weight:500;color:#fff}
+.credit-head .score{margin-left:auto;font-family:Inter,sans-serif;font-size:26px;font-weight:600;color:var(--blue-lt)}
+.credit .track{background:var(--dark-track)}
+.credit .track .fill{background:var(--blue-lt)}
+.credit p{font-size:12px;color:var(--dark-sub)}
+.me-stats{display:flex;gap:12px;padding:0 20px 16px 20px}
+.me-stat{flex:1;padding:16px;display:flex;flex-direction:column;gap:4px}
+.me-stat b{font-family:Inter,sans-serif;font-size:22px;font-weight:600;color:var(--ink)}
+.me-stat p{font-size:12px;color:var(--sub)}
+.interest-sec{padding:0 20px 20px 20px;display:flex;flex-direction:column;gap:10px}
+.int-head{display:flex;align-items:center}
+.int-head b{font-size:15px;font-weight:500;color:var(--ink)}
+.int-head span{margin-left:auto;font-size:13px;color:var(--blue);cursor:pointer}
+.mytag{
+  height:35px;display:flex;align-items:center;gap:5px;padding:8px 14px;border-radius:9999px;
+  font-size:13px;background:#fff;white-space:nowrap;cursor:pointer;user-select:nowrap;
+}
+.mytag.blue{border:1px solid var(--blue);color:var(--blue);font-weight:500}
+.mytag.gray{border:1px solid var(--border);color:var(--sub);font-weight:400}
+.mytag.add{background:var(--bg);border:1px solid transparent;color:var(--sub);cursor:pointer}
+/* ---------- 消息页（画布未含此屏，做空态）---------- */
+.empty-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.empty-wrap .ic{
+  width:72px;height:72px;border-radius:9999px;background:#fff;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+}
+.empty-wrap b{font-size:16px;font-weight:500;color:var(--ink)}
+.empty-wrap p{font-size:13px;color:var(--sub)}
+/* ---------- Toast ---------- */
+.toast{
+  position:absolute;left:50%;bottom:120px;transform:translateX(-50%) translateY(8px);
+  background:rgba(29,29,31,.88);color:#fff;font-size:13px;padding:10px 18px;border-radius:9999px;
+  opacity:0;pointer-events:none;transition:all .25s ease;z-index:99;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="device" id="device">
+
+    <!-- ================= 发现 ================= -->
+    <section class="screen active" data-s="discover">
+      <div class="statusbar">
+        <span class="sb-time">9:41</span>
+        <span class="sb-icons">
+          <svg width="17" height="11" viewBox="0 0 17 11"><g fill="#1D1D1F"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></g></svg>
+          <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 9.8a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8Z" fill="#1D1D1F"/><path d="M8 4.2c1.7 0 3.3.6 4.5 1.8l1.3-1.4A9 9 0 0 0 8 2.2a9 9 0 0 0-5.8 2.4l1.3 1.4A6.4 6.4 0 0 1 8 4.2Z" fill="#1D1D1F"/><path d="M8 .5c3 0 5.8 1.1 7.9 3.1l1.3-1.4A12.3 12.3 0 0 0 8-1.5 12.3 12.3 0 0 0-1.2 2.2L.1 3.6A11.3 11.3 0 0 1 8 .5Z" fill="#1D1D1F" transform="translate(0 1.2)"/></svg>
+          <svg width="26" height="12" viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3" fill="none" stroke="#1D1D1F" opacity=".4"/><rect x="2" y="2" width="15" height="8" rx="1.6" fill="#1D1D1F"/><path d="M23.5 4v4a2.2 2.2 0 0 0 0-4Z" fill="#1D1D1F" opacity=".5"/></svg>
+        </span>
+      </div>
+      <div class="scroll">
+        <!-- 头部：padding 20/20/4/14 · gap 14 -->
+        <div style="display:flex;flex-direction:column;gap:14px;padding:4px 20px 14px 20px">
+          <div class="hd-loc">
+            <span class="loc">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 16.5S3.5 11.6 3.5 7.6a5.5 5.5 0 1 1 11 0c0 4-5.5 8.9-5.5 8.9Z" stroke="#1D1D1F" stroke-width="1.5"/><circle cx="9" cy="7.4" r="1.9" fill="#1D1D1F"/></svg>
+              <b>上海 · 徐汇区</b>
+            </span>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2.5c-2.5 0-4.3 1.9-4.3 4.3 0 3-1.2 3.9-1.9 4.8-.3.4 0 1 .5 1h11.4c.5 0 .8-.6.5-1-.7-.9-1.9-1.8-1.9-4.8 0-2.4-1.8-4.3-4.3-4.3Z" stroke="#86868B" stroke-width="1.4" stroke-linejoin="round"/><path d="M8.4 15.8a1.7 1.7 0 0 0 3.2 0" stroke="#86868B" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <div class="searchbar" data-toast="搜索 · 演示版暂未开放">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="6.8" cy="6.8" r="4.8" stroke="#86868B" stroke-width="1.5"/><path d="m11.4 11.4 3 3" stroke="#86868B" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span>找个搭子？试试「今晚羽毛球」</span>
+          </div>
+        </div>
+        <!-- 兴趣标签：padding 0/20/0/12 · gap 8 -->
+        <div class="filter-row">
+          <button class="ftag active">全部</button>
+          <button class="ftag">羽毛球</button>
+          <button class="ftag">艺术展</button>
+          <button class="ftag">咖啡</button>
+          <button class="ftag">City Walk</button>
+        </div>
+        <!-- 推荐卡：padding 2/20/0/24 · gap 12 -->
+        <div class="rec-list">
+          <div class="rec-card card" data-nav="profile">
+            <div class="avatar g-blue"></div>
+            <div class="rec-body">
+              <div class="rec-name">
+                <span class="n"><b>阿哲</b><span class="age">28</span></span>
+                <span class="match">92%</span>
+              </div>
+              <div class="ai-reason">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.2c.5 1.6 1.2 2.3 2.8 2.8C7.2 4.5 6.5 5.2 6 6.8 5.5 5.2 4.8 4.5 3.2 4 4.8 3.5 5.5 2.8 6 1.2Z" fill="#0066CC"/><path d="M9.4 7c.25.8.6 1.15 1.4 1.4-.8.25-1.15.6-1.4 1.4-.25-.8-.6-1.15-1.4-1.4.8-.25 1.15-.6 1.4-1.4Z" fill="#0066CC"/></svg>
+                <p>同款球拍 · 今晚 8 点有空 · 偏好 AA</p>
+              </div>
+              <div class="rec-attr">
+                <span class="dist">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 11.2 2.2 7.1a4.9 4.9 0 1 1 7.6 0L6 11.2Z" stroke="#86868B" stroke-width="1.2"/><circle cx="6" cy="4.5" r="1.5" fill="#86868B"/></svg>
+                  <p>1.2km · 徐汇滨江</p>
+                </span>
+                <span class="act">刚活跃</span>
+              </div>
+            </div>
+          </div>
+          <div class="rec-card card" data-toast="演示版仅还原「阿哲」主页">
+            <div class="avatar g-orange"></div>
+            <div class="rec-body">
+              <div class="rec-name">
+                <span class="n"><b>小鹿</b><span class="age">26</span></span>
+                <span class="match">88%</span>
+              </div>
+              <div class="ai-reason">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.2c.5 1.6 1.2 2.3 2.8 2.8C7.2 4.5 6.5 5.2 6 6.8 5.5 5.2 4.8 4.5 3.2 4 4.8 3.5 5.5 2.8 6 1.2Z" fill="#0066CC"/><path d="M9.4 7c.25.8.6 1.15 1.4 1.4-.8.25-1.15.6-1.4 1.4-.25-.8-.6-1.15-1.4-1.4.8-.25 1.15-.6 1.4-1.4Z" fill="#0066CC"/></svg>
+                <p>都想去上博东馆 · 周末同行 · 可轮流请客</p>
+              </div>
+              <div class="rec-attr">
+                <span class="dist">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 11.2 2.2 7.1a4.9 4.9 0 1 1 7.6 0L6 11.2Z" stroke="#86868B" stroke-width="1.2"/><circle cx="6" cy="4.5" r="1.5" fill="#86868B"/></svg>
+                  <p>2.8km · 静安寺</p>
+                </span>
+                <span class="act">1 小时前活跃</span>
+              </div>
+            </div>
+          </div>
+          <div class="rec-card card" data-toast="演示版仅还原「阿哲」主页">
+            <div class="avatar g-green"></div>
+            <div class="rec-body">
+              <div class="rec-name">
+                <span class="n"><b>大山</b><span class="age">31</span></span>
+                <span class="match">85%</span>
+              </div>
+              <div class="ai-reason">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.2c.5 1.6 1.2 2.3 2.8 2.8C7.2 4.5 6.5 5.2 6 6.8 5.5 5.2 4.8 4.5 3.2 4 4.8 3.5 5.5 2.8 6 1.2Z" fill="#0066CC"/><path d="M9.4 7c.25.8.6 1.15 1.4 1.4-.8.25-1.15.6-1.4 1.4-.25-.8-.6-1.15-1.4-1.4.8-.25 1.15-.6 1.4-1.4Z" fill="#0066CC"/></svg>
+                <p>周末想徒步 · 4 条路线想法 · 费用你定</p>
+              </div>
+              <div class="rec-attr">
+                <span class="dist">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 11.2 2.2 7.1a4.9 4.9 0 1 1 7.6 0L6 11.2Z" stroke="#86868B" stroke-width="1.2"/><circle cx="6" cy="4.5" r="1.5" fill="#86868B"/></svg>
+                  <p>3.5km · 中山公园</p>
+                </span>
+                <span class="act">今天活跃</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tabbar-pill">
+          <button class="tab active" data-tab="discover">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.4" stroke="#fff" stroke-width="1.6"/><path d="m12.6 5.4-1.5 4.2-4.2 1.5 1.5-4.2 4.2-1.5Z" fill="#fff"/></svg>
+            <span class="tab-label">发现</span>
+          </button>
+          <button class="tab" data-tab="matches">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="3" width="15" height="12.5" rx="2.2" stroke="#86868B" stroke-width="1.5"/><path d="M4.5 8.5h9" stroke="#86868B" stroke-width="1.5" stroke-linecap="round"/><circle cx="7.5" cy="11.6" r="1.05" fill="#86868B"/></svg>
+            <span class="tab-label">搭局</span>
+          </button>
+          <button class="tab" data-tab="messages">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2.5 4.5A2 2 0 0 1 4.5 2.5h9a2 2 0 0 1 2 2v6.4a2 2 0 0 1-2 2H8.2L4.6 16a.9.9 0 0 1-1.5-.7v-2.8h-.6a2 2 0 0 1 0-4Z" transform="translate(0 -0.7)" stroke="#86868B" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            <span class="tab-label">消息</span>
+          </button>
+          <button class="tab" data-tab="me">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="5.4" r="3" stroke="#86868B" stroke-width="1.5"/><path d="M2.8 16c.6-3.4 3.1-5.2 6.2-5.2s5.6 1.8 6.2 5.2" stroke="#86868B" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span class="tab-label">我的</span>
+          </button>
+        </div>
+        <div class="home-indicator"></div>
+      </div>
+    </section>
+
+    <!-- ================= 我的搭局 ================= -->
+    <section class="screen" data-s="matches">
+      <div class="statusbar">
+        <span class="sb-time">9:41</span>
+        <span class="sb-icons">
+          <svg width="17" height="11" viewBox="0 0 17 11"><g fill="#1D1D1F"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></g></svg>
+          <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 9.8a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8Z" fill="#1D1D1F"/><path d="M8 4.2c1.7 0 3.3.6 4.5 1.8l1.3-1.4A9 9 0 0 0 8 2.2a9 9 0 0 0-5.8 2.4l1.3 1.4A6.4 6.4 0 0 1 8 4.2Z" fill="#1D1D1F"/><path d="M8 .5c3 0 5.8 1.1 7.9 3.1l1.3-1.4A12.3 12.3 0 0 0 8-1.5 12.3 12.3 0 0 0-1.2 2.2L.1 3.6A11.3 11.3 0 0 1 8 .5Z" fill="#1D1D1F" transform="translate(0 1.2)"/></svg>
+          <svg width="26" height="12" viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3" fill="none" stroke="#1D1D1F" opacity=".4"/><rect x="2" y="2" width="15" height="8" rx="1.6" fill="#1D1D1F"/><path d="M23.5 4v4a2.2 2.2 0 0 0 0-4Z" fill="#1D1D1F" opacity=".5"/></svg>
+        </span>
+      </div>
+      <div class="scroll">
+        <!-- 头部：padding 4/20/0/12 -->
+        <div class="page-title-row">
+          <b>我的搭局</b>
+          <span class="icon-btn" data-toast="日历视图 · 演示版暂未开放">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="4" width="15" height="13" rx="2.4" stroke="#1D1D1F" stroke-width="1.5"/><path d="M2.5 8.2h15" stroke="#1D1D1F" stroke-width="1.5"/><path d="M5.6 2.2v3M14.4 2.2v3" stroke="#1D1D1F" stroke-width="1.5" stroke-linecap="round"/><circle cx="6.7" cy="12" r="1.2" fill="#0066CC"/><circle cx="12.8" cy="12" r="1.2" fill="#0066CC"/></svg>
+          </span>
+        </div>
+        <!-- 分段控件 -->
+        <div class="seg">
+          <div class="seg-pill">
+            <button class="seg-item active" data-seg="ongoing">进行中 1</button>
+            <button class="seg-item" data-seg="history">历史 47</button>
+          </div>
+        </div>
+        <!-- 内容区：gap 14 -->
+        <div class="match-list" id="seg-ongoing">
+          <div class="ongoing card">
+            <div class="head">
+              <b>周五羽毛球局</b>
+              <span class="pbadge">3 天后</span>
+            </div>
+            <div class="mrow">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.4" stroke="#86868B" stroke-width="1.4"/><path d="M8 4.8V8l2.2 2.4" stroke="#86868B" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <p>周五 20:00 · 徐汇滨江羽毛球馆</p>
+            </div>
+            <div class="mrow">
+              <span class="avstack">
+                <span class="avatar g-dark"></span>
+                <span class="avatar g-blue"></span>
+              </span>
+              <p>我 + 阿哲 · 费用 AA ¥64.5/人</p>
+            </div>
+            <button class="btn-mid" data-toast="已进入搭局群（演示）">进入搭局群</button>
+          </div>
+          <b class="group-title">待你确认</b>
+          <div class="hist-card card">
+            <div class="avatar g-orange"></div>
+            <div class="hist-body">
+              <b>小鹿 邀你组「上博东馆艺术展」局</b>
+              <p>AI 建议：周六 14:00 · 轮流请客 · 等你拍板</p>
+            </div>
+            <button class="go-confirm" data-nav="negotiate">去确认</button>
+          </div>
+        </div>
+        <div class="match-list" id="seg-history" style="display:none">
+          <b class="group-title">近期完成</b>
+          <div class="hist-card card">
+            <div class="avatar g-green"></div>
+            <div class="hist-body">
+              <b>City Walk · 武康路</b>
+              <p>上周日 · 与大山 · AA ¥36/人</p>
+            </div>
+            <span class="hist-score">5.0</span>
+          </div>
+          <div class="hist-card card">
+            <div class="avatar g-blue"></div>
+            <div class="hist-body">
+              <b>羽毛球 · 静安体育馆</b>
+              <p>两周前 · 与阿哲 · AA ¥42/人</p>
+            </div>
+            <span class="hist-score">4.9</span>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tabbar-pill">
+          <button class="tab" data-tab="discover">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.4" stroke="#86868B" stroke-width="1.6"/><path d="m12.6 5.4-1.5 4.2-4.2 1.5 1.5-4.2 4.2-1.5Z" fill="#86868B" stroke="none"/></svg>
+            <span class="tab-label">发现</span>
+          </button>
+          <button class="tab active" data-tab="matches">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="3" width="15" height="12.5" rx="2.2" stroke="#fff" stroke-width="1.5"/><path d="M4.5 8.5h9" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><circle cx="7.5" cy="11.6" r="1.05" fill="#fff"/></svg>
+            <span class="tab-label">搭局</span>
+          </button>
+          <button class="tab" data-tab="messages">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2.5 4.5A2 2 0 0 1 4.5 2.5h9a2 2 0 0 1 2 2v6.4a2 2 0 0 1-2 2H8.2L4.6 16a.9.9 0 0 1-1.5-.7v-2.8h-.6a2 2 0 0 1 0-4Z" transform="translate(0 -0.7)" stroke="#86868B" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            <span class="tab-label">消息</span>
+          </button>
+          <button class="tab" data-tab="me">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="5.4" r="3" stroke="#86868B" stroke-width="1.5"/><path d="M2.8 16c.6-3.4 3.1-5.2 6.2-5.2s5.6 1.8 6.2 5.2" stroke="#86868B" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span class="tab-label">我的</span>
+          </button>
+        </div>
+        <div class="home-indicator"></div>
+      </div>
+    </section>
+
+    <!-- ================= 消息（画布未设计，空态占位） ================= -->
+    <section class="screen" data-s="messages">
+      <div class="statusbar">
+        <span class="sb-time">9:41</span>
+        <span class="sb-icons">
+          <svg width="17" height="11" viewBox="0 0 17 11"><g fill="#1D1D1F"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></g></svg>
+          <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 9.8a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8Z" fill="#1D1D1F"/><path d="M8 4.2c1.7 0 3.3.6 4.5 1.8l1.3-1.4A9 9 0 0 0 8 2.2a9 9 0 0 0-5.8 2.4l1.3 1.4A6.4 6.4 0 0 1 8 4.2Z" fill="#1D1D1F"/><path d="M8 .5c3 0 5.8 1.1 7.9 3.1l1.3-1.4A12.3 12.3 0 0 0 8-1.5 12.3 12.3 0 0 0-1.2 2.2L.1 3.6A11.3 11.3 0 0 1 8 .5Z" fill="#1D1D1F" transform="translate(0 1.2)"/></svg>
+          <svg width="26" height="12" viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3" fill="none" stroke="#1D1D1F" opacity=".4"/><rect x="2" y="2" width="15" height="8" rx="1.6" fill="#1D1D1F"/><path d="M23.5 4v4a2.2 2.2 0 0 0 0-4Z" fill="#1D1D1F" opacity=".5"/></svg>
+        </span>
+      </div>
+      <div class="scroll" style="display:flex;flex-direction:column">
+        <div class="empty-wrap">
+          <span class="ic">
+            <svg width="30" height="30" viewBox="0 0 18 18" fill="none"><path d="M2.5 4.5A2 2 0 0 1 4.5 2.5h9a2 2 0 0 1 2 2v6.4a2 2 0 0 1-2 2H8.2L4.6 16a.9.9 0 0 1-1.5-.7v-2.8h-.6a2 2 0 0 1 0-4Z" transform="translate(0 -0.7)" stroke="#86868B" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          </span>
+          <b>暂无新消息</b>
+          <p>搭局动态与协商进展会在这里提醒你</p>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tabbar-pill">
+          <button class="tab" data-tab="discover">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.4" stroke="#86868B" stroke-width="1.6"/><path d="m12.6 5.4-1.5 4.2-4.2 1.5 1.5-4.2 4.2-1.5Z" fill="#86868B" stroke="none"/></svg>
+            <span class="tab-label">发现</span>
+          </button>
+          <button class="tab" data-tab="matches">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="3" width="15" height="12.5" rx="2.2" stroke="#86868B" stroke-width="1.5"/><path d="M4.5 8.5h9" stroke="#86868B" stroke-width="1.5" stroke-linecap="round"/><circle cx="7.5" cy="11.6" r="1.05" fill="#86868B"/></svg>
+            <span class="tab-label">搭局</span>
+          </button>
+          <button class="tab active" data-tab="messages">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2.5 4.5A2 2 0 0 1 4.5 2.5h9a2 2 0 0 1 2 2v6.4a2 2 0 0 1-2 2H8.2L4.6 16a.9.9 0 0 1-1.5-.7v-2.8h-.6a2 2 0 0 1 0-4Z" transform="translate(0 -0.7)" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            <span class="tab-label">消息</span>
+          </button>
+          <button class="tab" data-tab="me">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="5.4" r="3" stroke="#86868B" stroke-width="1.5"/><path d="M2.8 16c.6-3.4 3.1-5.2 6.2-5.2s5.6 1.8 6.2 5.2" stroke="#86868B" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span class="tab-label">我的</span>
+          </button>
+        </div>
+        <div class="home-indicator"></div>
+      </div>
+    </section>
+
+    <!-- ================= 我的 ================= -->
+    <section class="screen" data-s="me">
+      <div class="statusbar">
+        <span class="sb-time">9:41</span>
+        <span class="sb-icons">
+          <svg width="17" height="11" viewBox="0 0 17 11"><g fill="#1D1D1F"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></g></svg>
+          <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 9.8a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8Z" fill="#1D1D1F"/><path d="M8 4.2c1.7 0 3.3.6 4.5 1.8l1.3-1.4A9 9 0 0 0 8 2.2a9 9 0 0 0-5.8 2.4l1.3 1.4A6.4 6.4 0 0 1 8 4.2Z" fill="#1D1D1F"/><path d="M8 .5c3 0 5.8 1.1 7.9 3.1l1.3-1.4A12.3 12.3 0 0 0 8-1.5 12.3 12.3 0 0 0-1.2 2.2L.1 3.6A11.3 11.3 0 0 1 8 .5Z" fill="#1D1D1F" transform="translate(0 1.2)"/></svg>
+          <svg width="26" height="12" viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3" fill="none" stroke="#1D1D1F" opacity=".4"/><rect x="2" y="2" width="15" height="8" rx="1.6" fill="#1D1D1F"/><path d="M23.5 4v4a2.2 2.2 0 0 0 0-4Z" fill="#1D1D1F" opacity=".5"/></svg>
+        </span>
+      </div>
+      <div class="scroll">
+        <div class="page-title-row">
+          <b>我的</b>
+          <span class="icon-btn" data-toast="设置 · 演示版暂未开放">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="2.6" stroke="#1D1D1F" stroke-width="1.5"/><path d="M11 2.2v2.4M11 17.4v2.4M2.2 11h2.4M17.4 11h2.4M4.8 4.8l1.7 1.7M15.5 15.5l1.7 1.7M17.2 4.8l-1.7 1.7M6.5 15.5l-1.7 1.7" stroke="#1D1D1F" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </span>
+        </div>
+        <!-- 个人卡：gap 14 -->
+        <div class="me-card">
+          <div class="avatar g-dark"></div>
+          <div class="me-info">
+            <b>阿叶</b>
+            <p>羽毛球 / 艺术展 / City Walk</p>
+            <span class="edit-pill" data-toast="编辑资料 · 演示版暂未开放">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M9.2 1.6 10.4 2.8a1 1 0 0 1 0 1.4L4 10.6l-2.6.6.6-2.6 6.4-6.4a1 1 0 0 1 .8-1.6Z" transform="translate(0 .2)" stroke="#86868B" stroke-width="1.2" stroke-linejoin="round"/></svg>
+              <span>编辑资料</span>
+            </span>
+          </div>
+        </div>
+        <!-- 信用卡：#272729 · 圆角 18 · padding 18 · gap 12 -->
+        <div class="credit-wrap">
+          <div class="credit">
+            <div class="credit-head">
+              <b>搭子信用</b>
+              <span class="score">96</span>
+            </div>
+            <div class="track"><div class="fill" style="width:96%"></div></div>
+            <p>准时赴约 47 次 · 零爽约 · 超过 98% 的搭子</p>
+          </div>
+        </div>
+        <!-- 统计行：3 卡 gap 12 · padding 16 -->
+        <div class="me-stats">
+          <div class="me-stat card"><b>47</b><p>累计搭局</p></div>
+          <div class="me-stat card"><b>23</b><p>固定搭子</p></div>
+          <div class="me-stat card"><b>¥58</b><p>场均消费</p></div>
+        </div>
+        <!-- 兴趣管理：gap 10 -->
+        <div class="interest-sec">
+          <div class="int-head">
+            <b>我的兴趣标签</b>
+            <span data-toast="标签管理 · 演示版暂未开放">管理</span>
+          </div>
+          <div class="tag-wrap">
+            <span class="mytag blue">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="3.4" stroke="#0066CC" stroke-width="1.6"/></svg>
+              羽毛球 · 每周
+            </span>
+            <span class="mytag blue">艺术展</span>
+            <span class="mytag blue">City Walk</span>
+            <span class="mytag gray">手冲咖啡</span>
+            <span class="mytag gray">科幻电影</span>
+            <span class="mytag add" data-toast="添加兴趣 · 演示版暂未开放">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="#86868B" stroke-width="1.5" stroke-linecap="round"/></svg>
+              添加
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tabbar-pill">
+          <button class="tab" data-tab="discover">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.4" stroke="#86868B" stroke-width="1.6"/><path d="m12.6 5.4-1.5 4.2-4.2 1.5 1.5-4.2 4.2-1.5Z" fill="#86868B" stroke="none"/></svg>
+            <span class="tab-label">发现</span>
+          </button>
+          <button class="tab" data-tab="matches">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="3" width="15" height="12.5" rx="2.2" stroke="#86868B" stroke-width="1.5"/><path d="M4.5 8.5h9" stroke="#86868B" stroke-width="1.5" stroke-linecap="round"/><circle cx="7.5" cy="11.6" r="1.05" fill="#86868B"/></svg>
+            <span class="tab-label">搭局</span>
+          </button>
+          <button class="tab" data-tab="messages">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2.5 4.5A2 2 0 0 1 4.5 2.5h9a2 2 0 0 1 2 2v6.4a2 2 0 0 1-2 2H8.2L4.6 16a.9.9 0 0 1-1.5-.7v-2.8h-.6a2 2 0 0 1 0-4Z" transform="translate(0 -0.7)" stroke="#86868B" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            <span class="tab-label">消息</span>
+          </button>
+          <button class="tab active" data-tab="me">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="5.4" r="3" stroke="#fff" stroke-width="1.5"/><path d="M2.8 16c.6-3.4 3.1-5.2 6.2-5.2s5.6 1.8 6.2 5.2" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span class="tab-label">我的</span>
+          </button>
+        </div>
+        <div class="home-indicator"></div>
+      </div>
+    </section>
+
+    <!-- ================= 搭子主页（推入页） ================= -->
+    <section class="screen" data-s="profile">
+      <div class="statusbar">
+        <span class="sb-time">9:41</span>
+        <span class="sb-icons">
+          <svg width="17" height="11" viewBox="0 0 17 11"><g fill="#1D1D1F"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></g></svg>
+          <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 9.8a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8Z" fill="#1D1D1F"/><path d="M8 4.2c1.7 0 3.3.6 4.5 1.8l1.3-1.4A9 9 0 0 0 8 2.2a9 9 0 0 0-5.8 2.4l1.3 1.4A6.4 6.4 0 0 1 8 4.2Z" fill="#1D1D1F"/><path d="M8 .5c3 0 5.8 1.1 7.9 3.1l1.3-1.4A12.3 12.3 0 0 0 8-1.5 12.3 12.3 0 0 0-1.2 2.2L.1 3.6A11.3 11.3 0 0 1 8 .5Z" fill="#1D1D1F" transform="translate(0 1.2)"/></svg>
+          <svg width="26" height="12" viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3" fill="none" stroke="#1D1D1F" opacity=".4"/><rect x="2" y="2" width="15" height="8" rx="1.6" fill="#1D1D1F"/><path d="M23.5 4v4a2.2 2.2 0 0 0 0-4Z" fill="#1D1D1F" opacity=".5"/></svg>
+        </span>
+      </div>
+      <div class="scroll">
+        <div class="back-row">
+          <button class="icon-btn" data-back>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.4 4 6.5 10l5.9 6" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <span class="title">搭子主页</span>
+          <button class="icon-btn" data-toast="更多操作 · 演示版暂未开放">
+            <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="3.9" cy="10" r="1.7" fill="#1D1D1F"/><circle cx="10" cy="10" r="1.7" fill="#1D1D1F"/><circle cx="16.1" cy="10" r="1.7" fill="#1D1D1F"/></svg>
+          </button>
+        </div>
+        <!-- 个人头部卡 -->
+        <div class="profile-head">
+          <div class="avatar g-blue"></div>
+          <div class="p-head-info">
+            <b>阿哲</b>
+            <p>羽毛球 / 电影 / 咖啡因依赖</p>
+            <div class="badge-row">
+              <span class="vbadge verified">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#0066CC" stroke-width="1.2"/><path d="m4 6.1 1.3 1.3L8 4.6" stroke="#0066CC" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                已实名
+              </span>
+              <span class="vbadge">搭龄 2 年</span>
+            </div>
+          </div>
+        </div>
+        <!-- 数据行：4 列 -->
+        <div class="stats-row">
+          <div class="stat"><b>47</b><p>搭局</p></div>
+          <div class="stat"><b>98%</b><p>好评率</p></div>
+          <div class="stat"><b>5 分钟</b><p>平均回应</p></div>
+          <div class="stat"><b>1.2km</b><p>距你</p></div>
+        </div>
+        <!-- AI 推荐卡 -->
+        <div class="ai-card">
+          <div class="ai-card-head">
+            <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 1.2c.5 1.6 1.2 2.3 2.8 2.8C7.2 4.5 6.5 5.2 6 6.8 5.5 5.2 4.8 4.5 3.2 4 4.8 3.5 5.5 2.8 6 1.2Z" fill="#fff"/><path d="M9.4 7c.25.8.6 1.15 1.4 1.4-.8.25-1.15.6-1.4 1.4-.25-.8-.6-1.15-1.4-1.4.8-.25 1.15-.6 1.4-1.4Z" fill="#fff"/></svg>
+            <b>为什么推荐 TA</b>
+          </div>
+          <hr>
+          <p>你们都用 YONEX 天斧 88D 球拍；他周五晚 7–10 点固定有空，与你 80% 的活跃时段重合；消费观一致——运动类偏好 AA，人均 50 元内。</p>
+        </div>
+        <!-- 共同兴趣 -->
+        <div class="sec">
+          <b class="sec-title">共同兴趣 · 6 个</b>
+          <div class="tag-wrap">
+            <span class="ctag blue">羽毛球 2 年</span>
+            <span class="ctag blue">科幻电影</span>
+            <span class="ctag blue">手冲咖啡</span>
+            <span class="ctag gray">夜跑</span>
+            <span class="ctag gray">City Walk</span>
+            <span class="ctag gray">悬疑推理</span>
+          </div>
+        </div>
+        <!-- 费用偏好 -->
+        <div class="fee-card card">
+          <div class="fee-head">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.4" stroke="#1D1D1F" stroke-width="1.4"/><path d="M8 1.6v2M8 12.4v2M1.6 8h2M12.4 8h2" stroke="#1D1D1F" stroke-width="1.4" stroke-linecap="round"/><text x="8" y="10.6" font-size="7" fill="#1D1D1F" text-anchor="middle" font-family="Inter">¥</text></svg>
+            <b>费用偏好</b>
+          </div>
+          <div class="fee-tags">
+            <span class="ftag2 sel">
+              <svg width="12" height="12" viewBox="0 0 12 12"><rect width="12" height="12" rx="3" fill="#0066CC"/><path d="m3.5 6.2 1.7 1.7 3.3-3.7" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              AA 分摊
+            </span>
+            <span class="ftag2">轮流请客</span>
+            <span class="ftag2">一人请客</span>
+          </div>
+        </div>
+      </div>
+      <!-- 底部操作栏 -->
+      <div class="bottom-bar">
+        <button class="btn-block" data-toast="已拉黑并反馈给匹配模型（演示）">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="6.8" stroke="#86868B" stroke-width="1.5"/><path d="m5.8 5.8 8.4 8.4" stroke="#86868B" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <button class="btn-primary" data-nav="negotiate">邀请搭局 · 让 AI 开始协商</button>
+      </div>
+    </section>
+
+    <!-- ================= AI 协商（推入页） ================= -->
+    <section class="screen" data-s="negotiate">
+      <div class="statusbar">
+        <span class="sb-time">9:41</span>
+        <span class="sb-icons">
+          <svg width="17" height="11" viewBox="0 0 17 11"><g fill="#1D1D1F"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></g></svg>
+          <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 9.8a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8Z" fill="#1D1D1F"/><path d="M8 4.2c1.7 0 3.3.6 4.5 1.8l1.3-1.4A9 9 0 0 0 8 2.2a9 9 0 0 0-5.8 2.4l1.3 1.4A6.4 6.4 0 0 1 8 4.2Z" fill="#1D1D1F"/><path d="M8 .5c3 0 5.8 1.1 7.9 3.1l1.3-1.4A12.3 12.3 0 0 0 8-1.5 12.3 12.3 0 0 0-1.2 2.2L.1 3.6A11.3 11.3 0 0 1 8 .5Z" fill="#1D1D1F" transform="translate(0 1.2)"/></svg>
+          <svg width="26" height="12" viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3" fill="none" stroke="#1D1D1F" opacity=".4"/><rect x="2" y="2" width="15" height="8" rx="1.6" fill="#1D1D1F"/><path d="M23.5 4v4a2.2 2.2 0 0 0 0-4Z" fill="#1D1D1F" opacity=".5"/></svg>
+        </span>
+      </div>
+      <div class="scroll">
+        <!-- 头部 -->
+        <div class="ng-head">
+          <button class="icon-btn" data-back>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.4 4 6.5 10l5.9 6" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="ng-title"><b>AI 正在协商</b><p>与 阿哲 · 羽毛球局</p></div>
+          <button class="icon-btn" data-back>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9" stroke="#86868B" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <!-- 进度条 -->
+        <div class="ng-progress">
+          <div class="lab">
+            <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M6 1.2c.5 1.6 1.2 2.3 2.8 2.8C7.2 4.5 6.5 5.2 6 6.8 5.5 5.2 4.8 4.5 3.2 4 4.8 3.5 5.5 2.8 6 1.2Z" fill="#0066CC"/><path d="M9.4 7c.25.8.6 1.15 1.4 1.4-.8.25-1.15.6-1.4 1.4-.25-.8-.6-1.15-1.4-1.4.8-.25 1.15-.6 1.4-1.4Z" fill="#0066CC"/></svg>
+            <b>费用分摊方式确认中 · 3/3 步</b>
+          </div>
+          <div class="track"><div class="fill" style="width:100%"></div></div>
+        </div>
+        <!-- 系统提示 -->
+        <div class="sys-tip"><span>AI 已接手协商，你可以先去忙别的</span></div>
+        <!-- 聊天区：gap 14 · padding 12/20 -->
+        <div class="chat">
+          <!-- 消息1 AI 发起 -->
+          <div class="bubble ai">
+            <div class="msg-head">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.2c.5 1.6 1.2 2.3 2.8 2.8C7.2 4.5 6.5 5.2 6 6.8 5.5 5.2 4.8 4.5 3.2 4 4.8 3.5 5.5 2.8 6 1.2Z" fill="#0066CC"/><path d="M9.4 7c.25.8.6 1.15 1.4 1.4-.8.25-1.15.6-1.4 1.4-.25-.8-.6-1.15-1.4-1.4.8-.25 1.15-.6 1.4-1.4Z" fill="#0066CC"/></svg>
+              <span>搭趣 AI · 刚刚</span>
+            </div>
+            <p class="msg-body">已为你们锁定本周五 20:00–22:00，徐汇滨江羽毛球馆 3 号场（人均 ¥42）。还差最后一步——费用怎么分？</p>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="opt sel" data-opt>
+                <p>AA 分摊 · 每人 ¥42</p>
+                <span class="ck">
+                  <svg width="16" height="16" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#0066CC"/><path d="m4.8 8.4 2.1 2.2 4.3-4.8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+              </div>
+              <div class="opt" data-opt>
+                <p style="color:#333">轮流请客 · 这次他请</p>
+                <span class="ck">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.2" stroke="#C7C7CC" stroke-width="1.5"/></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+          <!-- 消息2 协商汇总（暗卡） -->
+          <div class="bubble sum">
+            <div class="msg-head">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.2c.5 1.6 1.2 2.3 2.8 2.8C7.2 4.5 6.5 5.2 6 6.8 5.5 5.2 4.8 4.5 3.2 4 4.8 3.5 5.5 2.8 6 1.2Z" fill="#29A3FF"/><path d="M9.4 7c.25.8.6 1.15 1.4 1.4-.8.25-1.15.6-1.4 1.4-.25-.8-.6-1.15-1.4-1.4.8-.25 1.15-.6 1.4-1.4Z" fill="#29A3FF"/></svg>
+              <span>已协商完成 · 2 项</span>
+            </div>
+            <div class="sum-row"><span class="k">时间</span><span class="v">本周五 20:00–22:00</span></div>
+            <div class="sum-row"><span class="k">项目</span><span class="v">羽毛球 · 滨江馆 3 号场</span></div>
+            <div class="sum-row"><span class="k">费用</span><span class="v">AA · 每人 ¥42</span></div>
+            <div class="sum-row"><span class="k">人数</span><span class="v">2 人 · 已满员</span></div>
+          </div>
+          <!-- 消息3 用户回复 -->
+          <div class="bubble user-row">
+            <div class="user-msg"><p>就 AA，确认吧！</p></div>
+          </div>
+          <!-- 消息4 AI 确认 -->
+          <div class="bubble ai ok">
+            <div class="msg-head">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1.2c.5 1.6 1.2 2.3 2.8 2.8C7.2 4.5 6.5 5.2 6 6.8 5.5 5.2 4.8 4.5 3.2 4 4.8 3.5 5.5 2.8 6 1.2Z" fill="#0066CC"/><path d="M9.4 7c.25.8.6 1.15 1.4 1.4-.8.25-1.15.6-1.4 1.4-.25-.8-.6-1.15-1.4-1.4.8-.25 1.15-.6 1.4-1.4Z" fill="#0066CC"/></svg>
+              <span class="blue">方案已生成</span>
+            </div>
+            <p class="msg-body" data-nav="confirm" style="cursor:pointer">好耶！方案已按你们的习惯生成，阿哲那边也点头了。<u>去确认页锁单 →</u></p>
+          </div>
+        </div>
+      </div>
+      <!-- 底部输入 -->
+      <div class="input-bar">
+        <span class="voice-btn" data-toast="语音输入 · 演示版暂未开放">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect x="1" y="1" width="34" height="34" rx="17" stroke="#E0E0E0"/><rect x="14" y="8" width="8" height="15" rx="4" stroke="#86868B" stroke-width="1.5"/><path d="M10.5 16.5a7.5 7.5 0 0 0 15 0M18 24v4M14.5 28h7" stroke="#86868B" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </span>
+        <input type="text" placeholder="回复或让 AI 代答…" data-demo>
+        <button class="send-btn" data-toast="演示版：消息已交给 AI 代答（模拟）">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 13.5V2.5M8 2.5 3.5 7M8 2.5l4.5 4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= 搭局确认（推入页） ================= -->
+    <section class="screen" data-s="confirm">
+      <div class="statusbar">
+        <span class="sb-time">9:41</span>
+        <span class="sb-icons">
+          <svg width="17" height="11" viewBox="0 0 17 11"><g fill="#1D1D1F"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></g></svg>
+          <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 9.8a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8Z" fill="#1D1D1F"/><path d="M8 4.2c1.7 0 3.3.6 4.5 1.8l1.3-1.4A9 9 0 0 0 8 2.2a9 9 0 0 0-5.8 2.4l1.3 1.4A6.4 6.4 0 0 1 8 4.2Z" fill="#1D1D1F"/><path d="M8 .5c3 0 5.8 1.1 7.9 3.1l1.3-1.4A12.3 12.3 0 0 0 8-1.5 12.3 12.3 0 0 0-1.2 2.2L.1 3.6A11.3 11.3 0 0 1 8 .5Z" fill="#1D1D1F" transform="translate(0 1.2)"/></svg>
+          <svg width="26" height="12" viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3" fill="none" stroke="#1D1D1F" opacity=".4"/><rect x="2" y="2" width="15" height="8" rx="1.6" fill="#1D1D1F"/><path d="M23.5 4v4a2.2 2.2 0 0 0 0-4Z" fill="#1D1D1F" opacity=".5"/></svg>
+        </span>
+      </div>
+      <div class="scroll">
+        <div class="back-row">
+          <button class="icon-btn" data-back>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.4 4 6.5 10l5.9 6" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <span class="title">搭局确认</span>
+          <button class="icon-btn" data-toast="分享卡片 · 演示版暂未开放">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3v8.8" stroke="#1D1D1F" stroke-width="1.6" stroke-linecap="round"/><path d="M6.6 6.2 10 2.8l3.4 3.4" stroke="#1D1D1F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 11.5v3.6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3.6" stroke="#1D1D1F" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;padding:4px 20px 16px 20px">
+          <!-- 方案卡 -->
+          <div class="plan-card card">
+            <div class="plan-head"><b>周五羽毛球局</b><span class="pbadge">待你确认</span></div>
+            <div class="plan-row">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.4" stroke="#86868B" stroke-width="1.4"/><path d="M8 4.8V8l2.2 2.4" stroke="#86868B" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <p>9 月 12 日 周五 20:00–22:00</p>
+            </div>
+            <div class="plan-row">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 14.5s-5-4.4-5-8a5 5 0 1 1 10 0c0 3.6-5 8-5 8Z" stroke="#86868B" stroke-width="1.4"/><circle cx="8" cy="6.4" r="1.7" fill="#86868B"/></svg>
+              <p>徐汇滨江羽毛球馆 · 3 号场（距你 1.2km）</p>
+            </div>
+            <div class="plan-row">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="5.4" cy="4.6" r="2.1" stroke="#86868B" stroke-width="1.3"/><path d="M1.8 14c.4-2.8 2-4.2 4.2-4.2S9.8 11.2 10.2 14" stroke="#86868B" stroke-width="1.3" stroke-linecap="round"/><circle cx="11" cy="5.2" r="1.8" stroke="#86868B" stroke-width="1.3"/><path d="M12.6 10.2c1.3.6 2 1.8 2.2 3.4" stroke="#86868B" stroke-width="1.3" stroke-linecap="round"/></svg>
+              <p>2 人 · 你 + 阿哲（已满员）</p>
+            </div>
+          </div>
+          <!-- 费用明细卡 -->
+          <div class="fee-detail card">
+            <div class="fee-d-head"><b>费用分摊 · AA</b><span>AI 已按双方偏好推荐</span></div>
+            <div class="fee-line"><span class="k">场地费 · 2 小时</span><span class="v">¥84</span></div>
+            <div class="fee-line"><span class="k">用球 · 亚士龙 3 桶</span><span class="v">¥45</span></div>
+            <div style="height:1px;background:var(--sep)"></div>
+            <div class="fee-line total"><span class="k">合计</span><span class="v">¥129</span></div>
+            <div class="perhead"><span class="k">每人应付（AA）</span><span class="v">¥64.5</span></div>
+          </div>
+          <!-- 参与人卡 -->
+          <div class="people-card card">
+            <b>参与人 · 确认状态</b>
+            <div class="prow">
+              <div class="avatar g-dark"></div>
+              <b>我 · 发起人</b>
+              <span class="st">已确认 ✓</span>
+            </div>
+            <div class="prow">
+              <div class="avatar g-blue"></div>
+              <b>阿哲 · 搭子</b>
+              <span class="st">已确认 ✓</span>
+            </div>
+            <div class="notice">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5 12 3.4v3.3c0 3-2.1 5-5 5.8-2.9-.8-5-2.8-5-5.8V3.4L7 1.5Z" stroke="#86868B" stroke-width="1.3" stroke-linejoin="round"/><path d="m4.9 6.9 1.5 1.5 2.8-3" stroke="#86868B" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <p>双方确认后自动锁定；爽约将计入信用分</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 底部操作 -->
+      <div class="confirm-bar">
+        <button class="btn-primary" id="lockBtn" style="width:100%">确认方案 · 锁定羽毛球局</button>
+        <button class="btn-ghost" data-back>有变动？让 AI 重新协商</button>
+      </div>
+    </section>
+
+    <div class="toast" id="toast"></div>
+  </div>
+  <div class="caption"><b>搭趣 SpotPal</b> · 严格还原 Ardot 设计稿 · 六屏交互原型</div>
+</div>
+
+<script>
+/* ============ 导航：Tab 根页 + 推入页栈 ============ */
+const screens=document.querySelectorAll('.screen');
+const tabScreens=['discover','matches','messages','me'];
+let stack=['discover'];
+
+function show(name,mode){
+  screens.forEach(s=>s.classList.toggle('active',s.dataset.s===name));
+  const el=document.querySelector(`.screen[data-s="${name}"]`);
+  el.classList.remove('push-in','fade-in');
+  void el.offsetWidth;
+  el.classList.add(mode==='push'?'push-in':'fade-in');
+  const sc=el.querySelector('.scroll');if(sc)sc.scrollTop=0;
+}
+function navTo(name){
+  if(tabScreens.includes(name)){stack=[name];show(name,'tab');}
+  else{stack.push(name);show(name,'push');}
+}
+function goBack(){
+  if(stack.length>1){stack.pop();show(stack[stack.length-1],'tab');}
+}
+document.addEventListener('click',e=>{
+  const nav=e.target.closest('[data-nav]');
+  if(nav){navTo(nav.dataset.nav);return;}
+  const tab=e.target.closest('[data-tab]');
+  if(tab){stack=[tab.dataset.tab];show(tab.dataset.tab,'tab');return;}
+  const back=e.target.closest('[data-back]');
+  if(back){goBack();return;}
+  const toastBtn=e.target.closest('[data-toast]');
+  if(toastBtn){toast(toastBtn.dataset.toast);return;}
+  if(e.target.closest('[data-demo]')){toast('演示版：输入已交给 AI 代答（模拟）');}
+});
+/* ============ 兴趣筛选切换 ============ */
+document.querySelectorAll('.ftag').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.ftag').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+  });
+});
+/* ============ 分段切换（我的搭局） ============ */
+document.querySelectorAll('.seg-item').forEach(s=>{
+  s.addEventListener('click',()=>{
+    document.querySelectorAll('.seg-item').forEach(x=>x.classList.remove('active'));
+    s.classList.add('active');
+    document.getElementById('seg-ongoing').style.display=s.dataset.seg==='ongoing'?'flex':'none';
+    document.getElementById('seg-history').style.display=s.dataset.seg==='history'?'flex':'none';
+  });
+});
+/* ============ 费用方式切换（搭子主页） ============ */
+document.querySelectorAll('.ftag2').forEach(f=>{
+  f.addEventListener('click',()=>{
+    document.querySelectorAll('.ftag2').forEach(x=>{x.classList.remove('sel');const ck=x.querySelector('svg');if(ck)ck.style.display='none';});
+    f.classList.add('sel');
+    const ck=f.querySelector('svg');if(ck)ck.style.display='';
+    if(!f.querySelector('svg')&&f.classList.contains('sel')){
+      f.insertAdjacentHTML('afterbegin','<svg width="12" height="12" viewBox="0 0 12 12"><rect width="12" height="12" rx="3" fill="#0066CC"/><path d="m3.5 6.2 1.7 1.7 3.3-3.7" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+    }
+  });
+});
+/* ============ 协商选项切换 ============ */
+document.querySelectorAll('.opt').forEach(o=>{
+  o.addEventListener('click',()=>{
+    document.querySelectorAll('.opt').forEach(x=>{
+      x.querySelector('.ck').innerHTML='<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.2" stroke="#C7C7CC" stroke-width="1.5"/></svg>';
+      const p=x.querySelector('p');p.style.color='#333';p.style.removeProperty&&0;
+    });
+    o.querySelector('.ck').innerHTML='<svg width="16" height="16" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="#0066CC"/><path d="m4.8 8.4 2.1 2.2 4.3-4.8" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    o.querySelector('p').style.color='#1D1D1F';
+    toast('已选择：'+o.querySelector('p').textContent.split('·')[0].trim());
+  });
+});
+/* ============ 锁定方案 ============ */
+document.getElementById('lockBtn').addEventListener('click',function(){
+  const btn=this;
+  btn.textContent='锁定中…';btn.style.opacity=.7;
+  setTimeout(()=>{
+    btn.textContent='确认方案 · 锁定羽毛球局';btn.style.opacity=1;
+    stack=['matches'];show('matches','tab');
+    toast('已锁定周五羽毛球局 · 进入待赴约');
+  },700);
+});
+/* ============ Toast ============ */
+let toastTimer=null;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),1800);
+}
+/* ============ 视口自适应缩放 ============ */
+function fit(){
+  const stage=document.querySelector('.stage');
+  const need=900; /* 844 设备 + 22 gap + caption */
+  const scale=Math.min(1,(window.innerHeight-24)/need,(window.innerWidth-24)/414);
+  stage.style.transform=`scale(${scale})`;
+  stage.style.transformOrigin='center center';
+}
+window.addEventListener('resize',fit);fit();
+</script>
+</body>
+</html>
