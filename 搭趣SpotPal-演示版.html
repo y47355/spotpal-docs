@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="FSfa5o1I1Fg2lruNCj5uCS">
+<head data-page-node-id="kjJqR03Ta6InyGNKmQFVkE">
+<meta charset="UTF-8" data-page-node-id="A0YO4pw2prMWkJGyaP6uuf">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" data-page-node-id="IQVEakOQTYJ9AIYpkQipuI">
+<title>搭趣 SpotPal — 兴趣搭子轻社交 · 演示版</title>
+<style>
+  :root{
+    --primary:#0066CC; --primary-bright:#2997FF;
+    --ink:#1D1D1F; --ink-80:#333333; --ink-48:#7A7A7A;
+    --canvas:#FFFFFF; --parchment:#F5F5F7; --hairline:#E0E0E0; --divider:#F0F0F0;
+    --dark:#272729; --green:#34C759; --blue-bg:#E8F1FB;
+    --r-card:18px; --r-inner:11px; --r-pill:9999px;
+    --f-num:'Inter','SF Pro Text',-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif;
+    --f-cn:'SF Pro Text',-apple-system,'PingFang SC','Noto Sans SC','Microsoft YaHei','Inter',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    background:#0c0c0e; font-family:var(--f-cn); color:var(--ink); overflow:hidden;
+  }
+  /* ============ 开屏封面 ============ */
+  .cover{
+    position:fixed; inset:0; z-index:200; background:var(--parchment);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:0; padding:40px; transition:opacity .5s, visibility .5s; overflow-y:auto;
+  }
+  .cover.hide{opacity:0; visibility:hidden; pointer-events:none}
+  .cover .eyebrow{
+    font-family:var(--f-num); font-size:12px; letter-spacing:3px; color:var(--ink-48);
+    margin-bottom:18px; font-weight:600;
+  }
+  .cover h1{
+    font-size:clamp(34px, 5vw, 52px); font-weight:600; letter-spacing:-1px;
+    text-align:center; line-height:1.15; max-width:640px;
+  }
+  .cover .sub{
+    font-size:16px; line-height:26px; color:var(--ink-48); text-align:center;
+    max-width:520px; margin-top:16px;
+  }
+  .feat-row{display:flex; gap:14px; margin-top:38px; flex-wrap:wrap; justify-content:center; max-width:760px}
+  .feat{
+    background:var(--canvas); border:1px solid var(--hairline); border-radius:var(--r-card);
+    padding:20px 22px; width:220px; display:flex; flex-direction:column; gap:10px; text-align:left;
+  }
+  .feat .fi{width:36px; height:36px; border-radius:18px; background:var(--blue-bg);
+    display:flex; align-items:center; justify-content:center}
+  .feat b{font-size:15px; font-weight:600}
+  .feat span{font-size:12.5px; line-height:19px; color:var(--ink-48)}
+  .cover .start-btn{
+    margin-top:42px; height:56px; padding:0 44px; border-radius:28px; background:var(--primary);
+    color:#fff; font-size:17px; font-weight:600; font-family:var(--f-cn);
+    display:flex; align-items:center; gap:10px; cursor:pointer; border:none;
+    transition:transform .15s ease, box-shadow .2s; box-shadow:0 8px 24px rgba(0,102,204,.28);
+  }
+  .cover .start-btn:hover{transform:translateY(-2px)}
+  .cover .start-btn:active{transform:scale(.97)}
+  .cover .foot-note{
+    position:absolute; bottom:26px; left:0; right:0; text-align:center;
+    font-size:12px; color:#A1A1A6; line-height:20px;
+  }
+  /* ============ 舞台 ============ */
+  .stage{
+    height:100%; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:18px; padding:16px 0;
+  }
+  /* ============ 手机壳 ============ */
+  .phone{
+    width:390px; height:844px; max-height:calc(100vh - 96px); background:var(--parchment);
+    border-radius:47px; overflow:hidden; position:relative;
+    box-shadow:0 0 0 11px #1a1a1c, 0 0 0 13px #333336, 0 40px 80px rgba(0,0,0,.55);
+    display:flex; flex-direction:column; flex:none;
+  }
+  /* ============ 状态栏 ============ */
+  .statusbar{
+    height:62px; flex:none; display:flex; align-items:center; justify-content:space-between;
+    padding:10px 28px 0 32px; position:relative; z-index:20;
+  }
+  .statusbar .time{font-family:var(--f-num); font-size:16px; font-weight:600; letter-spacing:.2px}
+  .statusbar .icons{display:flex; gap:6px; align-items:center}
+  .statusbar svg{display:block}
+  /* ============ 通用 ============ */
+  .screen{flex:1; display:none; flex-direction:column; overflow:hidden; position:relative}
+  .screen.active{display:flex}
+  .scroll{flex:1; overflow-y:auto; overscroll-behavior:contain}
+  .scroll::-webkit-scrollbar{display:none}
+  .avatar{border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:600; font-family:var(--f-num)}
+  .av-blue{background:linear-gradient(135deg,#66A0F0,#2E66CC)}
+  .av-warm{background:linear-gradient(135deg,#F2C785,#D98047)}
+  .av-green{background:linear-gradient(135deg,#8CD9A6,#339972)}
+  .av-dark{background:#1D1D1F}
+  .card{background:var(--canvas); border:1px solid var(--hairline); border-radius:var(--r-card)}
+  .btn-primary{
+    height:54px; border-radius:27px; background:var(--primary); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:600;
+    cursor:pointer; user-select:none; transition:transform .15s ease;
+  }
+  .btn-primary:active{transform:scale(.95)}
+  .back-arrow{width:20px;height:20px;flex:none;cursor:pointer}
+  /* ============ Tab 栏 ============ */
+  .tabbar{flex:none; padding:12px 21px 21px; position:relative; z-index:20}
+  .tab-pill{
+    height:62px; border-radius:36px; background:var(--canvas); border:1px solid var(--hairline);
+    display:flex; padding:4px;
+  }
+  .tab-item{
+    flex:1; border-radius:26px; display:flex; flex-direction:column; gap:4px;
+    align-items:center; justify-content:center; cursor:pointer; transition:background .2s;
+  }
+  .tab-item svg{display:block}
+  .tab-item span{font-size:10px; font-weight:500; letter-spacing:.5px; color:var(--ink-48)}
+  .tab-item.active{background:var(--primary)}
+  .tab-item.active span{color:#fff; font-weight:600}
+  .tab-item.active svg *{stroke:#fff}
+  .tab-item.active svg .fill-white{fill:#fff; stroke:none}
+  /* ============ 发现页 ============ */
+  .discover-head{padding:4px 20px 14px; display:flex; flex-direction:column; gap:14px}
+  .loc-row{display:flex; justify-content:space-between; align-items:center}
+  .loc{display:flex; gap:6px; align-items:center; font-size:15px; font-weight:600}
+  .searchbar{
+    height:44px; border-radius:var(--r-pill); background:var(--canvas);
+    border:1px solid var(--hairline); display:flex; align-items:center; gap:8px; padding:0 16px;
+  }
+  .searchbar span{font-size:15px; color:var(--ink-48)}
+  .chips{display:flex; gap:8px; padding:0 20px 12px; overflow-x:auto; flex:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex:none; height:32px; border-radius:var(--r-pill); padding:0 14px;
+    display:flex; align-items:center; font-size:13px; background:var(--canvas);
+    border:1px solid var(--hairline); cursor:pointer; white-space:nowrap;
+  }
+  .chip.on{background:var(--ink); color:#fff; font-weight:500; border-color:var(--ink)}
+  .rec-card{margin:0 20px 12px; padding:14px; display:flex; gap:12px; align-items:center;
+    cursor:pointer; transition:transform .15s}
+  .rec-card:active{transform:scale(.98)}
+  .rec-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px}
+  .rec-name{display:flex; justify-content:space-between; align-items:center}
+  .rec-name .n{display:flex; gap:6px; align-items:center}
+  .rec-name .nm{font-size:16px; font-weight:600}
+  .rec-name .age{font-family:var(--f-num); font-size:13px; color:var(--ink-48)}
+  .rec-name .match{font-family:var(--f-num); font-size:15px; font-weight:600; color:var(--primary)}
+  .ai-reason{
+    background:var(--parchment); border-radius:var(--r-inner); padding:8px 10px;
+    display:flex; gap:6px; align-items:center; font-size:12px; color:var(--ink-80);
+  }
+  .rec-meta{display:flex; gap:6px; align-items:center; font-size:12px; color:var(--ink-48)}
+  /* ============ 搭子主页 ============ */
+  .nav-head{padding:4px 20px 8px; display:flex; justify-content:space-between; align-items:center; flex:none}
+  .nav-head .t{font-size:16px; font-weight:600}
+  .profile-hero{padding:8px 20px 0; display:flex; gap:14px; align-items:center; flex:none}
+  .profile-info{flex:1; display:flex; flex-direction:column; gap:6px}
+  .profile-info h1{font-size:22px; font-weight:600}
+  .profile-info .bio{font-size:13px; color:var(--ink-48)}
+  .badges{display:flex; gap:6px}
+  .badge{height:26px; border-radius:var(--r-pill); background:var(--parchment); padding:0 10px;
+    display:flex; align-items:center; gap:4px; font-size:11px}
+  .badge.v{color:var(--primary); font-weight:600}
+  .badge span{color:var(--ink-48)}
+  .stats-row{display:flex; padding:16px 20px; flex:none}
+  .stat{flex:1; display:flex; flex-direction:column; gap:2px; align-items:center}
+  .stat b{font-family:var(--f-num); font-size:18px; font-weight:600}
+  .stat span{font-size:12px; color:var(--ink-48)}
+  .dark-card{
+    margin:0 20px; background:var(--dark); border-radius:var(--r-card); padding:16px;
+    color:#fff; display:flex; flex-direction:column; gap:10px;
+  }
+  .dark-card h3{font-size:14px; font-weight:600; display:flex; gap:6px; align-items:center}
+  .dark-card p{font-size:14px; line-height:22px; color:#CCC}
+  .sect{padding:16px 20px 8px}
+  .sect h3{font-size:15px; font-weight:600; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center}
+  .sect h3 .mg{font-size:13px; color:var(--primary); font-weight:400}
+  .tagwrap{display:flex; flex-wrap:wrap; gap:8px}
+  .tag{
+    height:30px; border-radius:var(--r-pill); background:var(--canvas); border:1px solid var(--hairline);
+    padding:0 12px; display:flex; align-items:center; font-size:12px; color:var(--ink-48);
+  }
+  .tag.hl{border-color:var(--primary); color:var(--primary)}
+  .fee-card{margin:8px 20px 0; padding:16px; display:flex; flex-direction:column; gap:10px}
+  .fee-head{display:flex; gap:8px; align-items:center; font-size:14px; font-weight:600}
+  .fee-row{display:flex; gap:8px}
+  .fee-opt{
+    height:32px; border-radius:var(--r-inner); background:var(--parchment); padding:0 12px;
+    display:flex; align-items:center; gap:5px; font-size:12px; color:var(--ink-48); cursor:pointer;
+  }
+  .fee-opt.on{color:var(--primary); font-weight:600}
+  .bottom-cta{padding:12px 20px 30px; display:flex; gap:10px; align-items:center; flex:none;
+    background:linear-gradient(to top, var(--parchment) 70%, transparent)}
+  .icon-btn{
+    width:54px; height:54px; border-radius:27px; background:var(--canvas);
+    border:1px solid var(--hairline); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex:none;
+  }
+  .bottom-cta .btn-primary{flex:1; height:54px}
+  /* ============ AI 协商 ============ */
+  .negotiate-head{padding:4px 20px 10px; display:flex; justify-content:space-between; align-items:center; flex:none}
+  .negotiate-head .c{flex:1; display:flex; flex-direction:column; gap:2px; align-items:center}
+  .negotiate-head .c .t{font-size:16px; font-weight:600}
+  .negotiate-head .c .s{font-size:12px; color:var(--ink-48)}
+  .progress-wrap{padding:0 20px 12px; display:flex; flex-direction:column; gap:8px; flex:none}
+  .progress-label{display:flex; gap:8px; align-items:center; font-size:12px; font-weight:600; color:var(--primary)}
+  .progress-track{height:4px; border-radius:2px; background:var(--hairline); overflow:hidden}
+  .progress-fill{height:100%; background:var(--primary); border-radius:2px; width:0;
+    transition:width .8s cubic-bezier(.4,0,.2,1)}
+  .sys-hint{display:flex; justify-content:center; padding-bottom:4px; flex:none}
+  .sys-hint .pill{
+    height:26px; border-radius:var(--r-pill); background:var(--canvas); border:1px solid var(--hairline);
+    padding:0 14px; display:flex; align-items:center; font-size:11px; color:var(--ink-48);
+  }
+  .chat{flex:1; overflow-y:auto; padding:12px 20px; display:flex; flex-direction:column; gap:14px}
+  .chat::-webkit-scrollbar{display:none}
+  .msg{max-width:264px; border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px;
+    opacity:0; transform:translateY(14px); animation:msgIn .45s cubic-bezier(.3,.9,.4,1) forwards}
+  @keyframes msgIn{to{opacity:1; transform:translateY(0)}}
+  .msg .mh{display:flex; gap:6px; align-items:center; font-size:11px; color:var(--ink-48)}
+  .msg .mb{font-size:14px; line-height:22px}
+  .msg.ai{background:var(--canvas); border:1px solid var(--hairline); align-self:flex-start}
+  .msg.ai.done{border:1.5px solid var(--primary)}
+  .msg.ai.done .mh{color:var(--primary); font-weight:600}
+  .msg.dark{background:var(--dark); color:#fff; align-self:flex-start}
+  .msg.dark .mh{color:#999}
+  .msg.dark .mb{color:#fff; font-weight:500}
+  .msg.me{background:var(--primary); color:#fff; align-self:flex-end}
+  .msg.me .mb{color:#fff}
+  .opt-list{display:flex; flex-direction:column; gap:8px}
+  .opt{
+    height:40px; border-radius:var(--r-inner); background:var(--parchment); padding:0 12px;
+    display:flex; justify-content:space-between; align-items:center; font-size:13px; cursor:pointer;
+  }
+  .opt .ck{width:16px; height:16px; border-radius:50%; border:1.5px solid #C7C7CC; flex:none;
+    display:flex; align-items:center; justify-content:center}
+  .opt.on{color:var(--primary); font-weight:600}
+  .opt.on .ck{background:var(--primary); border-color:var(--primary)}
+  .kv{display:flex; gap:8px; align-items:center; font-size:13px}
+  .kv .k{width:36px; color:#999; font-size:12px}
+  .kv .v{color:#fff; font-weight:500}
+  .typing{display:flex; gap:4px; padding:4px 0; align-items:center}
+  .typing i{width:6px; height:6px; border-radius:50%; background:var(--primary); opacity:.4;
+    animation:blink 1s infinite}
+  .typing i:nth-child(2){animation-delay:.2s}
+  .typing i:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+  .input-bar{padding:10px 20px 30px; display:flex; gap:10px; align-items:center; flex:none;
+    background:linear-gradient(to top, var(--parchment) 70%, transparent)}
+  .round-icon{
+    width:36px; height:36px; border-radius:50%; background:var(--canvas); border:1px solid var(--hairline);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex:none;
+  }
+  .input-field{
+    flex:1; height:40px; border-radius:20px; background:var(--canvas); border:1px solid var(--hairline);
+    padding:0 14px; display:flex; align-items:center; font-size:14px; color:var(--ink-48);
+  }
+  .send-btn{width:36px; height:36px; border-radius:50%; background:var(--primary);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex:none;
+    transition:transform .15s}
+  .send-btn:active{transform:scale(.9)}
+  /* ============ 搭局确认 ============ */
+  .confirm-body{padding:4px 20px 16px; display:flex; flex-direction:column; gap:14px}
+  .plan-card{padding:18px; display:flex; flex-direction:column; gap:14px}
+  .plan-head{display:flex; justify-content:space-between; align-items:center}
+  .plan-head h3{font-size:18px; font-weight:600}
+  .state-badge{
+    height:24px; border-radius:var(--r-pill); background:var(--blue-bg); padding:0 10px;
+    display:flex; align-items:center; font-size:11px; font-weight:600; color:var(--primary);
+  }
+  .plan-row{display:flex; gap:10px; align-items:center; font-size:14px}
+  .fee-table{padding:18px; display:flex; flex-direction:column; gap:12px}
+  .fee-table .th{display:flex; justify-content:space-between; align-items:center}
+  .fee-table .th b{font-size:15px; font-weight:600}
+  .fee-table .th span{font-size:11px; color:var(--ink-48)}
+  .fee-line{display:flex; justify-content:space-between; font-size:14px}
+  .fee-line .l{color:var(--ink-48)}
+  .fee-line.total{font-weight:600}
+  .fee-line.per{
+    background:var(--parchment); border-radius:var(--r-inner); padding:10px 12px; margin:0 -12px;
+  }
+  .fee-line.per .l{color:var(--primary); font-weight:600; font-size:13px}
+  .fee-line.per .v{color:var(--primary); font-family:var(--f-num); font-weight:600; font-size:16px}
+  .hr{height:1px; background:var(--divider)}
+  .people-card{padding:18px; display:flex; flex-direction:column; gap:12px}
+  .people-card h3{font-size:15px; font-weight:600}
+  .p-row{display:flex; gap:10px; align-items:center; font-size:14px; font-weight:600}
+  .p-row .n{flex:1}
+  .p-row .st{font-size:12px; font-weight:600; color:var(--green)}
+  .note-line{
+    background:var(--parchment); border-radius:var(--r-inner); padding:10px 12px;
+    display:flex; gap:6px; align-items:center; font-size:12px; color:var(--ink-48);
+  }
+  .confirm-cta{padding:10px 20px 30px; display:flex; flex-direction:column; gap:10px; flex:none;
+    background:linear-gradient(to top, var(--parchment) 70%, transparent)}
+  .btn-ghost{
+    height:44px; border-radius:22px; background:var(--canvas); border:1px solid var(--hairline);
+    display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--ink-48); cursor:pointer;
+  }
+  /* ============ 我的搭局 ============ */
+  .me-head{padding:4px 20px 12px; display:flex; justify-content:space-between; align-items:center; flex:none}
+  .me-head h1{font-size:22px; font-weight:600}
+  .seg{padding:0 20px 14px; flex:none}
+  .seg-pill{
+    height:36px; border-radius:var(--r-pill); background:var(--canvas); border:1px solid var(--hairline);
+    display:flex; padding:3px;
+  }
+  .seg-item{flex:1; border-radius:var(--r-pill); display:flex; align-items:center; justify-content:center;
+    font-size:13px; color:var(--ink-48); cursor:pointer}
+  .seg-item.on{background:var(--ink); color:#fff; font-weight:600}
+  .act-body{padding:0 20px 20px; display:flex; flex-direction:column; gap:14px}
+  .ongoing-card{padding:18px; display:flex; flex-direction:column; gap:14px}
+  .og-head{display:flex; justify-content:space-between; align-items:center}
+  .og-head h3{font-size:17px; font-weight:600}
+  .count-badge{height:24px; border-radius:var(--r-pill); background:var(--blue-bg); padding:0 10px;
+    display:flex; align-items:center; font-size:11px; font-weight:600; color:var(--primary)}
+  .og-row{display:flex; gap:10px; align-items:center; font-size:13px; color:var(--ink-48)}
+  .av-stack{display:flex}
+  .av-stack .avatar{border:2px solid #fff}
+  .av-stack .avatar + .avatar{margin-left:-8px}
+  .og-btn{height:42px; border-radius:21px; background:var(--primary); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600; cursor:pointer;
+    transition:transform .15s}
+  .og-btn:active{transform:scale(.97)}
+  .list-h{font-size:15px; font-weight:600}
+  .row-card{padding:14px; display:flex; gap:12px; align-items:center}
+  .row-card .rc{flex:1; display:flex; flex-direction:column; gap:5px; min-width:0}
+  .row-card .rt{font-size:14px; font-weight:600}
+  .row-card .rs{font-size:12px; color:var(--ink-48)}
+  .row-card .rr{font-family:var(--f-num); font-size:14px; font-weight:600}
+  .go-btn{
+    height:30px; border-radius:var(--r-pill); background:var(--primary); padding:0 14px;
+    display:flex; align-items:center; font-size:12px; font-weight:600; color:#fff; cursor:pointer; flex:none;
+  }
+  /* ============ 我的 ============ */
+  .my-head{padding:4px 20px 12px; display:flex; justify-content:space-between; align-items:center; flex:none}
+  .my-head h1{font-size:22px; font-weight:600}
+  .me-card{padding:0 20px 16px; display:flex; gap:14px; align-items:center; flex:none}
+  .me-info{flex:1; display:flex; flex-direction:column; gap:6px}
+  .me-info h2{font-size:20px; font-weight:600}
+  .me-info .bio{font-size:13px; color:var(--ink-48)}
+  .edit-btn{
+    height:26px; border-radius:var(--r-pill); border:1px solid var(--hairline); padding:0 12px;
+    display:flex; align-items:center; gap:4px; font-size:11px; color:var(--ink-48);
+    background:var(--canvas); cursor:pointer; width:fit-content;
+  }
+  .credit-card{margin:0 20px; background:var(--dark); border-radius:var(--r-card); padding:18px;
+    display:flex; flex-direction:column; gap:12px}
+  .credit-head{display:flex; justify-content:space-between; align-items:center}
+  .credit-head b{font-size:14px; font-weight:600; color:#fff}
+  .credit-head .v{font-family:var(--f-num); font-size:26px; font-weight:600; color:var(--primary-bright)}
+  .credit-track{height:4px; border-radius:2px; background:#3A3A3C; overflow:hidden}
+  .credit-fill{height:100%; width:96%; background:var(--primary-bright); border-radius:2px}
+  .credit-desc{font-size:12px; color:#999}
+  .my-stats{display:flex; gap:12px; padding:14px 20px 16px}
+  .my-stat{flex:1; padding:16px; display:flex; flex-direction:column; gap:4px}
+  .my-stat b{font-family:var(--f-num); font-size:22px; font-weight:600}
+  .my-stat span{font-size:12px; color:var(--ink-48)}
+  .interest-sec{padding:0 20px 20px}
+  .interest-sec .sect-in{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
+  .interest-sec h3{font-size:15px; font-weight:600}
+  .interest-sec .mg{font-size:13px; color:var(--primary); cursor:pointer}
+  .add-tag{background:var(--parchment); border:none; color:var(--ink-48); gap:5px; cursor:pointer}
+  /* toast */
+  .toast{
+    position:absolute; left:50%; bottom:120px; transform:translateX(-50%) translateY(20px);
+    background:rgba(29,29,31,.92); color:#fff; font-size:13px; padding:10px 18px;
+    border-radius:var(--r-pill); opacity:0; pointer-events:none; transition:all .3s; z-index:99;
+    white-space:nowrap;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  /* ============ 演示控制条 ============ */
+  .demo-bar{
+    display:flex; align-items:center; gap:16px; flex:none;
+  }
+  .dots{display:flex; gap:8px; align-items:center}
+  .dot{
+    width:30px; height:8px; border-radius:4px; background:rgba(255,255,255,.16);
+    cursor:pointer; transition:all .25s; position:relative;
+  }
+  .dot:hover{background:rgba(255,255,255,.34)}
+  .dot.on{background:var(--primary); width:44px}
+  .demo-label{
+    font-size:12px; color:#9a9aa0; letter-spacing:.4px; min-width:104px;
+    font-family:var(--f-cn);
+  }
+  .replay-btn{
+    height:32px; padding:0 14px; border-radius:16px; background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.14); color:#c8c8cc; font-size:12px; font-family:var(--f-cn);
+    display:flex; align-items:center; gap:6px; cursor:pointer; transition:all .2s;
+  }
+  .replay-btn:hover{background:rgba(255,255,255,.14); color:#fff}
+  .kbd-hint{font-size:11px; color:#5d5d63; letter-spacing:.4px}
+  .kbd-hint b{color:#8f8f95; font-weight:500; font-family:var(--f-num)}
+</style>
+</head>
+<body data-page-node-id="10uDonfE0aoJyj6sZssXEH">
+
+<!-- ============ 开屏封面 ============ -->
+<div class="cover" id="cover" data-page-node-id="58BwFfuvLBmunFXzAWPBsR">
+  <div class="eyebrow" data-page-node-id="CwIsMPshuOMsx44H03GeNF">SPOTPAL · AI 轻社交</div>
+  <h1 data-page-node-id="O7ZTH5povZOIOjsa9FKKpR">临时想做什么，<br data-page-node-id="tR1f6FgJmfteUY7W860rfT">都有人一起。</h1>
+  <p class="sub" data-page-node-id="UqbQAJE1KkS24Tvivi931M">搭趣——基于兴趣与位置的轻社交。找到附近的同好，让 AI 谈妥时间、活动项目与费用分摊，你只需要出现。</p>
+  <div class="feat-row" data-page-node-id="5SdELdePlGyz3SCq2PcjsV">
+    <div class="feat" data-page-node-id="YCo1enfQhKeMnfUTHfwpfD">
+      <div class="fi" data-page-node-id="aEs0EFpbAre8G4lNQGt9H2">
+        <svg width="20" height="20" viewBox="0 0 20 20" data-page-node-id="LHjrLLvn2SGfLf0Gl23Cbd"><path d="M10 16.8s6.2-5.6 6.2-10A6.2 6.2 0 0 0 3.8 6.8c0 4.4 6.2 10 6.2 10Z" stroke="#0066CC" stroke-width="1.7" stroke-linejoin="round" data-page-node-id="wKhTDWThSacEj1P6YAFcEm"/><circle cx="10" cy="6.7" r="2.4" stroke="#0066CC" stroke-width="1.7" data-page-node-id="RexMQ0FH9GcEtHjGLejHX8"/></svg>
+      </div>
+      <b data-page-node-id="YgWynmxuERSAzuZolRPdSN">附近 × 同好</b>
+      <span data-page-node-id="4hwJWcDWjtg3MvfC1GRtUt">基于位置与兴趣双维度匹配，实时发现身边的活动搭子。</span>
+    </div>
+    <div class="feat" data-page-node-id="noL6clvgJw6QIIwvrNSIsP">
+      <div class="fi" data-page-node-id="KrbgTPPWgc7BuKb09n3BHx">
+        <svg width="20" height="20" viewBox="0 0 20 20" data-page-node-id="ideHw2HTth0T2vBBWXE59p"><path d="M10 1.8 11.9 6 16.3 6.6 13.1 9.7 14 14 10 11.8 6 14l.9-4.3L3.7 6.6 8.1 6Z" fill="#0066CC" data-page-node-id="zO6FIQb5xeqhfDEBki8l51"/></svg>
+      </div>
+      <b data-page-node-id="BfqWYYEMxhnAe1ILxlFTjT">AI 代协商</b>
+      <span data-page-node-id="zFcf7scKtrRM0cfyGQEqjC">时间、活动项目、费用分摊方式，AI 全程撮合，双方一键确认。</span>
+    </div>
+    <div class="feat" data-page-node-id="xRILxIBjyhlPtQMHAqYD8c">
+      <div class="fi" data-page-node-id="0lgvQa4y9EaGnmIUGgf8AC">
+        <svg width="20" height="20" viewBox="0 0 20 20" data-page-node-id="SuLsKel7AaYyjZGmfradEB"><path d="M6.5 7.5C6.5 5 8.3 3.5 10.5 3.5S14.5 5 14.5 7.2c0 1.1-.5 2-1.4 2.7l-1.2.9c-.5.4-.8.9-.8 1.7" stroke="#0066CC" stroke-width="1.7" stroke-linecap="round" data-page-node-id="YdpeTqSVw1nwTtnWwNexcS"/><circle cx="10.6" cy="16.4" r="1.3" fill="#0066CC" data-page-node-id="9JeEKJgOtDv1VXWA6chqJV"/></svg>
+      </div>
+      <b data-page-node-id="Ercy9WwpU6rSuWgKPGwMdc">轻社交零负担</b>
+      <span data-page-node-id="SZNOTdfC6mB2mYjZBID4tc">搭完即散，不尬聊；信用体系让每次赴约都靠谱。</span>
+    </div>
+  </div>
+  <button class="start-btn" onclick="startDemo()" data-page-node-id="DQvdsSge2qNuU7i2gabqto">
+    开始体验
+    <svg width="16" height="16" viewBox="0 0 16 16" data-page-node-id="iSR5tprSvVC3vSVqRTnA2q"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="qxFQqH64H7562uUy9H7hDh"/></svg>
+  </button>
+  <div class="foot-note" data-page-node-id="dzlKGGayUiWVnAsLN8ThXg">
+    演示版 · 数据均为模拟 · 6 屏可交互原型（发现 → 搭子主页 → AI 协商 → 搭局确认 → 我的搭局 → 我的）<br data-page-node-id="0EoOsvhdGKpxjIqdz8erPU">
+    建议使用 Edge / Chrome 浏览器打开 · 支持键盘 ← → 切换屏幕
+  </div>
+</div>
+
+<!-- ============ 舞台 ============ -->
+<div class="stage" id="stage" data-page-node-id="UkuEgfWAlGVoPYfuQXVu1c">
+  <div class="phone" data-page-node-id="Ndbivd7yR4cqVSNVIuSvYq">
+    <!-- 状态栏 -->
+    <div class="statusbar" data-page-node-id="A2ytHD45izPA58Wkm1EYsz">
+      <span class="time" data-page-node-id="WTqyEofTKZOST4HI9ekohI">9:41</span>
+      <div class="icons" data-page-node-id="CXkTRC1Tc5WHSDFTzjyw83">
+        <svg width="18" height="12" viewBox="0 0 18 12" data-page-node-id="MoUCHg8C44P0a3f6G9kxVh"><rect y="8" width="3" height="4" rx="1" fill="#1D1D1F" data-page-node-id="TrennRFdkgbFG7jkiuwdyY"/><rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="#1D1D1F" data-page-node-id="nluFptxlW1ZyDy5t2PBMf2"/><rect x="10" y="3" width="3" height="9" rx="1" fill="#1D1D1F" data-page-node-id="2nsAmD4wKBFxDrFGIoMQjZ"/><rect x="15" width="3" height="12" rx="1" fill="#1D1D1F" data-page-node-id="x9iwWE3mZ2DuVc8aSZrNdi"/></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" data-page-node-id="SIGCyUMWEVMjDZ0b6KEWJv"><circle cx="8" cy="10" r="1.3" fill="#1D1D1F" data-page-node-id="lAPM1yXMktRw0zHYv7WARE"/><path d="M5.2 7.2C6.1 6.4 7 6 8 6s1.9.4 2.8 1.2" stroke="#1D1D1F" stroke-width="1.4" stroke-linecap="round" data-page-node-id="2u9FNCVckg20KVdsa9jssr"/><path d="M3 4.9C4.4 3.4 6.1 2.7 8 2.7s3.6.7 5 2.2" stroke="#1D1D1F" stroke-width="1.4" stroke-linecap="round" data-page-node-id="8A3ZZJftO6TYyVeLuhdETG"/><path d="M.9 2.6C2.7.9 5.2 0 8 0s5.3.9 7.1 2.6" stroke="#1D1D1F" stroke-width="1.4" stroke-linecap="round" data-page-node-id="ZnrkqDinlXFG6H25VXjqCU"/></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" data-page-node-id="JvCC8S6ybJwCrAzhri8889"><rect x=".5" y=".5" width="21" height="11" rx="3.5" stroke="#1D1D1F" opacity=".4" data-page-node-id="8CEputHWTW6hhixeE6m0WY"/><path d="M23 4v4a2.4 2.4 0 0 0 0-4Z" fill="#1D1D1F" opacity=".4" data-page-node-id="lpfx11BEEQHIGt92AZtAKP"/><rect x="2" y="2" width="15" height="8" rx="2" fill="#1D1D1F" data-page-node-id="MlXlgYSlHhZ6lNGVinm9JK"/></svg>
+      </div>
+    </div>
+
+    <!-- ========== 屏幕1 发现 ========== -->
+    <div class="screen active" id="scr-discover" data-page-node-id="UFJUUZWEH7kU36FrBSOfxr">
+      <div class="discover-head" data-page-node-id="mJJCLa4CDv5SDnAgNB02Ob">
+        <div class="loc-row" data-page-node-id="ePHQdZiEBr2dx9yxNZxl9t">
+          <div class="loc" data-page-node-id="V7YhNN75qCvEJHfG8J0y6Z">
+            <svg width="18" height="18" viewBox="0 0 18 18" data-page-node-id="Tppa0tiscMKEdsBMq4g9xC"><path d="M9 16.5s6-5.4 6-9.6A6 6 0 0 0 3 6.9c0 4.2 6 9.6 6 9.6Z" stroke="#0066CC" stroke-width="1.6" stroke-linejoin="round" data-page-node-id="HhbYQmy73MjK18mERWCBQZ"/><circle cx="9" cy="6.8" r="2.3" stroke="#0066CC" stroke-width="1.6" data-page-node-id="9xIE8uGTCCBzTbNg7SRIeR"/></svg>
+            <span data-page-node-id="BvFse3y3fh2Lg3bGBq4s1X">上海 · 徐汇区</span>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 20 20" data-page-node-id="A0kqejlkwoh3JVw2IMBiwk"><path d="M10 2.5c-2.8 0-4.6 2-4.6 4.5v3l-1.4 2.6c-.3.6.1 1.3.8 1.3h10.4c.7 0 1.1-.7.8-1.3l-1.4-2.6v-3c0-2.5-1.8-4.5-4.6-4.5Z" stroke="#7A7A7A" stroke-width="1.5" stroke-linejoin="round" data-page-node-id="Hds4iir7Pj5VbyW2byvmeP"/><circle cx="10" cy="16.8" r="1.4" fill="#7A7A7A" data-page-node-id="ZFHKfONwpajWbMwm2gF3Z2"/></svg>
+        </div>
+        <div class="searchbar" data-page-node-id="amfrz2gdqmx3txMgYtDLxS">
+          <svg width="16" height="16" viewBox="0 0 16 16" data-page-node-id="XjNLbklow0QeSNRMvHCWVn"><circle cx="7" cy="7" r="5" stroke="#7A7A7A" stroke-width="1.6" data-page-node-id="qZpSczmml8g086bL2r7HXD"/><path d="M11 11l3.5 3.5" stroke="#7A7A7A" stroke-width="1.6" stroke-linecap="round" data-page-node-id="zltAfDf9w3NxwAvwXjPLjZ"/></svg>
+          <span data-page-node-id="6A362YamujyGhjmpCmuCJn">找个搭子？试试「今晚羽毛球」</span>
+        </div>
+      </div>
+      <div class="chips" id="chip-bar" data-page-node-id="9xojRsJCwc2Zf6UGYWPMKE">
+        <div class="chip on" data-page-node-id="AJ2C05HzHHWYfucKyM0zT9">全部</div><div class="chip" data-page-node-id="TiApITbTleVJAnUEj2ghUu">羽毛球</div><div class="chip" data-page-node-id="Ro1M5hgG91kssrcAT5N41P">艺术展</div>
+        <div class="chip" data-page-node-id="oGj0kDSmnwDCNWRBkyHs2C">咖啡</div><div class="chip" data-page-node-id="xWENfw4VUdFOaWIVCjMU9E">City Walk</div><div class="chip" data-page-node-id="Tu9lsB1BbHKrwDNSbkfVIk">夜跑</div><div class="chip" data-page-node-id="esXXtvb8m9axWjRPKvtYZR">桌游</div>
+      </div>
+      <div class="scroll" id="rec-list" data-page-node-id="HBlEEdXukL4arKQROc8ZAn"></div>
+      <div class="tabbar" data-page-node-id="RmJyc845XKX7RnJB1FAm8j">
+        <div class="tab-pill" data-page-node-id="VB5C8iCnksHD3AqST0J9ki">
+          <div class="tab-item active" data-tab="discover" data-page-node-id="LwGApSyCRoqeeRn7QJxen7">
+            <svg width="18" height="18" viewBox="0 0 18 18" data-page-node-id="1C9qp7WAqB28wKWNRwEQdg"><circle cx="9" cy="9" r="3.2" class="fill-white" fill="#7A7A7A" data-page-node-id="SqhEiSUBDGyhgyD7h6Runs"/><path d="M9 1.2v1.6M9 15.2v1.6M1.2 9h1.6M15.2 9h1.6M3.5 3.5l1.1 1.1M13.4 13.4l1.1 1.1M14.5 3.5l-1.1 1.1M4.6 13.4l-1.1 1.1" stroke="#7A7A7A" stroke-width="1.4" stroke-linecap="round" data-page-node-id="AUZBtUIXuozmfjXbyfEeKO"/></svg>
+            <span data-page-node-id="Ec4Zem7LGLKr97XfemqVX4">发现</span>
+          </div>
+          <div class="tab-item" data-tab="groups" data-page-node-id="fTQf7Xk9kFPlOJ15YARTDC">
+            <svg width="18" height="18" viewBox="0 0 18 18" data-page-node-id="sS4n4HDPB6sGbMvzCAVAZk"><rect x="1.5" y="3" width="15" height="12.5" rx="3" stroke="#7A7A7A" stroke-width="1.5" data-page-node-id="68GLR8FdUTf4chm8GTaAxI"/><path d="M4.5 8.5h4M9.5 11.5h4" stroke="#7A7A7A" stroke-width="1.5" stroke-linecap="round" data-page-node-id="IzqWzx4rOubiMhf4XbJ1xZ"/><circle cx="7" cy="12.8" r="2.1" stroke="#7A7A7A" stroke-width="1.5" data-page-node-id="zfqD7l9Co4ZX7GPrrAmMiv"/></svg>
+            <span data-page-node-id="3g9v8tEAFfr9TCtVRxSbW3">搭局</span>
+          </div>
+          <div class="tab-item" data-tab="chat" data-page-node-id="zLxplGsXGgGUSjhNH5Ktk9">
+            <svg width="18" height="18" viewBox="0 0 18 18" data-page-node-id="balk4FKd8WTVOrjANCOBWo"><path d="M9 2.5c-3.9 0-7 2.6-7 5.8 0 1.8 1 3.4 2.6 4.4-.2.9-.7 1.9-1.5 2.7 1.4-.1 2.7-.6 3.7-1.3.7.2 1.4.3 2.2.3 3.9 0 7-2.6 7-5.8s-3.1-6.1-7-6.1Z" stroke="#7A7A7A" stroke-width="1.5" stroke-linejoin="round" data-page-node-id="BuOYM2HjiofdNRoE6kQP8R"/></svg>
+            <span data-page-node-id="hIxW0kkjdMMCDtr9WFnpk0">消息</span>
+          </div>
+          <div class="tab-item" data-tab="me" data-page-node-id="GdWclpDEoKrcaG8E3MANLz">
+            <svg width="18" height="18" viewBox="0 0 18 18" data-page-node-id="m2gDKyMHxEeKEkDBhF6kv5"><circle cx="9" cy="6" r="3" stroke="#7A7A7A" stroke-width="1.5" data-page-node-id="qIw4WcyFuiV5kYFu8y0X16"/><path d="M2.8 15.5c.7-2.9 3.2-4.5 6.2-4.5s5.5 1.6 6.2 4.5" stroke="#7A7A7A" stroke-width="1.5" stroke-linecap="round" data-page-node-id="yfX5ACwmon5O9fGEC4jCfl"/></svg>
+            <span data-page-node-id="YdeQLyKg569FOMiItjvx6N">我的</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 屏幕2 搭子主页 ========== -->
+    <div class="screen" id="scr-profile" data-page-node-id="F7CjUNTSJ562YyxRidA2Oe">
+      <div class="scroll" data-page-node-id="d5JmqFHVMOImlTpZLqxRpY">
+        <div class="nav-head" data-page-node-id="nIwRX9G4pZUgMkKBkqCv4i">
+          <svg class="back-arrow" onclick="showScreen('scr-discover')" viewBox="0 0 20 20" data-page-node-id="e2tWOj9mnd4xEHFp54ybme"><path d="M12.5 4 6.5 10l6 6" stroke="#1D1D1F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="Ul1DYlxoFRAWRKNBfICvlO"/></svg>
+          <span class="t" data-page-node-id="REy45dGvKaYP9wxafxBY72">搭子主页</span>
+          <svg width="20" height="20" viewBox="0 0 20 20" data-page-node-id="fjm57c5htzXJpr7cFeoUf5"><circle cx="4" cy="10" r="1.7" fill="#1D1D1F" data-page-node-id="hzdG5WSzyXltOLskSMlGiN"/><circle cx="10" cy="10" r="1.7" fill="#1D1D1F" data-page-node-id="D3rdD3R9U6GtLC0QK9v8kT"/><circle cx="16" cy="10" r="1.7" fill="#1D1D1F" data-page-node-id="ZHmCo0xiCuB5vYIlYLQlaX"/></svg>
+        </div>
+        <div class="profile-hero" data-page-node-id="z09I8Q6U0H6iZzFnIAyd61">
+          <div class="avatar av-blue" style="width:76px;height:76px;font-size:24px" data-page-node-id="RjRK2NK7lE2sqQq1sRb8FI">哲</div>
+          <div class="profile-info" data-page-node-id="rXxDTR8T11cKoB56PaESzq">
+            <h1 data-page-node-id="2BvjlSmCzpMA0fbHeobsRh">阿哲</h1>
+            <div class="bio" data-page-node-id="jWeFNcNN2iMd79Z2KTa4Cj">羽毛球 / 电影 / 咖啡因依赖</div>
+            <div class="badges" data-page-node-id="Qjp60IDwIYVSVUwsQNvM04">
+              <div class="badge v" data-page-node-id="IinouiE6DHGLRtrclLgvzA">
+                <svg width="12" height="12" viewBox="0 0 12 12" data-page-node-id="52iCfZC3KiEiBVDsoCenE6"><circle cx="6" cy="6" r="5" stroke="#0066CC" stroke-width="1.2" data-page-node-id="PQ6oAUqamk8mrEDIvascdb"/><path d="M4 6.2 5.3 7.5 8 4.6" stroke="#0066CC" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="rzD0FZCsEDdbQ35l6ciY7B"/></svg>
+                已实名
+              </div>
+              <div class="badge" data-page-node-id="VXTmRkKODRk9eL7HtzxGEU"><span data-page-node-id="CLmlyUx68O1j88p7ANPkGi">搭龄 2 年</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="stats-row" data-page-node-id="jBMeZdU1BESRMBPN6dbeav">
+          <div class="stat" data-page-node-id="2Usc0hx46VlrtHX5Az7Wn8"><b data-page-node-id="s2cNCahvyjHeHUuysLm1mP">47</b><span data-page-node-id="5pjwlvZxQ7I7B9mOQo1AGE">搭局</span></div>
+          <div class="stat" data-page-node-id="R5nyzablVfYaf2j529P4rD"><b data-page-node-id="ozOjJ3GeUipGrj8pdryjIe">98%</b><span data-page-node-id="LgalKxztK9K3AgXcohGWMf">好评率</span></div>
+          <div class="stat" data-page-node-id="Joh2CE5oCP9BZIG13TiD8K"><b data-page-node-id="hqIm3JxwE9Jy7slU1AhrWO">5 分钟</b><span data-page-node-id="AHb3XUyGAgCKBIrIyZBEXo">平均回应</span></div>
+          <div class="stat" data-page-node-id="d5V49kNnyyqhExBfVyK1z3"><b data-page-node-id="1anU0G8hIkLOdIFHYqHkCS">1.2km</b><span data-page-node-id="fpVRrFziTp9N6DSD1kXUJI">距你</span></div>
+        </div>
+        <div class="dark-card" data-page-node-id="0N0KfMYrqbLzoBmnaQOZaD">
+          <h3 data-page-node-id="Hzoa1fFVTWWZLUsg7oqPLa">
+            <svg width="14" height="14" viewBox="0 0 14 14" data-page-node-id="OY16w7HOuhQqqlIM1tFqJe"><path d="M7 1.4 8.4 4.2 11.4 4.7 9.2 6.9 9.8 9.9 7 8.5 4.2 9.9 4.8 6.9 2.6 4.7 5.6 4.2Z" fill="#2997FF" data-page-node-id="Pxn6gmZJibzgjaTGunXyPW"/></svg>
+            为什么推荐 TA
+          </h3>
+          <p data-page-node-id="bBWEserMhyXiMP5EkRoVou">你们都用 YONEX 天斧 88D 球拍；他周五晚 7–10 点固定有空，与你 80% 的活跃时段重合；消费观一致——运动类偏好 AA，人均 50 元内。</p>
+        </div>
+        <div class="sect" style="padding-top:16px" data-page-node-id="CBmhZixEwlFULlatuNT4IK">
+          <h3 data-page-node-id="YAdSbHNok9qUfBkV8idPZS">共同兴趣 · 6 个</h3>
+          <div class="tagwrap" data-page-node-id="jzAlYaHHT5UKBcqmLyAEyc">
+            <div class="tag hl" data-page-node-id="bl7R3XeRWEzzPiOcnXiYMd">羽毛球 2 年</div><div class="tag hl" data-page-node-id="RDNxvWXXTThUmCEi9UbxQd">科幻电影</div><div class="tag hl" data-page-node-id="NjRTPLSUL3YZsSdNSQml5D">手冲咖啡</div>
+            <div class="tag" data-page-node-id="b9hQrth1PZtJUEBrjvdVBz">夜跑</div><div class="tag" data-page-node-id="50xhDkKrx4sLrpuDVsNCDO">City Walk</div><div class="tag" data-page-node-id="h7ESRPSNRFQqbNHgAUiFqh">悬疑推理</div>
+          </div>
+        </div>
+        <div style="padding:16px 20px 12px" data-page-node-id="jD24FHkUrJ1R7Tn9uIskpD">
+          <div class="card fee-card" style="margin:0" data-page-node-id="7JJbOZEPjxOWENF4dGuF7w">
+            <div class="fee-head" data-page-node-id="dL52KeOgGAil3Hrr9OoKhu">
+              <svg width="16" height="16" viewBox="0 0 16 16" data-page-node-id="a9bG94PL4z5FuXmjQQ6h2i"><circle cx="8" cy="8" r="6.2" stroke="#1D1D1F" stroke-width="1.4" data-page-node-id="yKT1l6Wu1PugbxR7eCUFYt"/><path d="M8 4.6v6.8M10 6.2c-.5-.8-1.3-1.1-2-1.1-1 0-1.8.6-1.8 1.4 0 2 3.8 1 3.8 3.1 0 .9-.9 1.4-2 1.4-.8 0-1.5-.3-2-1" stroke="#1D1D1F" stroke-width="1.2" stroke-linecap="round" data-page-node-id="cuFT2tNuVEOGlZ78MFcwDY"/></svg>
+              费用偏好
+            </div>
+            <div class="fee-row" data-page-node-id="AZUvGA98nSJ9fVMhOoQMte">
+              <div class="fee-opt on" data-fee data-page-node-id="3RYSvyHerEe4ldJk3WW6vt">
+                <svg width="12" height="12" viewBox="0 0 12 12" data-page-node-id="OOMwKuxTYrKGtiO4KY9voT"><rect width="12" height="12" rx="6" fill="#0066CC" data-page-node-id="JzHDy4FZLhmVACjIukjOER"/><path d="M3.5 6.2 5.2 8 8.5 4.2" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="ZwqHQCmGIO52vMDNxE1HVz"/></svg>
+                AA 分摊
+              </div>
+              <div class="fee-opt" data-fee data-page-node-id="WgSLpqE4g3TnDN1Fe8Bl1I">轮流请客</div>
+              <div class="fee-opt" data-fee data-page-node-id="nSXXReC25jamWTOZ5O28Gm">一人请客</div>
+            </div>
+          </div>
+        </div>
+        <div style="height:70px" data-page-node-id="P3Gws5bl8D2AT8u7xW1kn7"></div>
+      </div>
+      <div class="bottom-cta" data-page-node-id="olfxU9fnL77ogA1kOp8KXM">
+        <div class="icon-btn" data-page-node-id="1unOKMMUHgLPlE74nHBh44">
+          <svg width="20" height="20" viewBox="0 0 20 20" data-page-node-id="dZDacXNgNDmLeLi3xqwHPe"><circle cx="10" cy="10" r="6.8" stroke="#7A7A7A" stroke-width="1.5" data-page-node-id="dgPkXaFx6ASdBmmF6I11Ap"/><path d="M4.2 15.8 15.8 4.2" stroke="#7A7A7A" stroke-width="1.5" stroke-linecap="round" data-page-node-id="c3dk6tHrRLfRnm1P1Rq2qD"/></svg>
+        </div>
+        <div class="btn-primary" onclick="goNegotiate()" data-page-node-id="nM6O1Cw5rIB8M7AbX7eXun">邀请搭局 · 让 AI 开始协商</div>
+      </div>
+    </div>
+
+    <!-- ========== 屏幕3 AI 协商 ========== -->
+    <div class="screen" id="scr-negotiate" data-page-node-id="JnTH9PVC286f69jyU2sCqQ">
+      <div class="negotiate-head" data-page-node-id="9vMWEtBXUGaHznBjoTtdOb">
+        <svg class="back-arrow" onclick="showScreen('scr-profile')" viewBox="0 0 20 20" data-page-node-id="yNgEt8iAfCDHv8iTi5ucDt"><path d="M12.5 4 6.5 10l6 6" stroke="#1D1D1F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="WKdfSiKoCl1eq1Y0zMWGJt"/></svg>
+        <div class="c" data-page-node-id="HwtexPwTDTG1bV4qukwfRu"><span class="t" data-page-node-id="9Layq6VNLA0GH3Fyd9va4U">AI 正在协商</span><span class="s" data-page-node-id="IXonTYEVLwkwpUkBBuTyy9">与 阿哲 · 羽毛球局</span></div>
+        <svg width="20" height="20" onclick="showScreen('scr-discover')" viewBox="0 0 20 20" data-page-node-id="Znq66JuHVPnEHk0Pr6LiG2"><path d="M5 5l10 10M15 5 5 15" stroke="#7A7A7A" stroke-width="1.8" stroke-linecap="round" data-page-node-id="wrqQaRxtvbsKOyXtykQdSU"/></svg>
+      </div>
+      <div class="progress-wrap" data-page-node-id="pPQ76Eik5iLV9Mxx8Svo7W">
+        <div class="progress-label" data-page-node-id="7Qid0Sar0J8x2LLoTMKF04">
+          <svg width="14" height="14" viewBox="0 0 14 14" data-page-node-id="iMj0TXRSqWnFsUcd7GfIhS"><path d="M7 1.4 8.4 4.2 11.4 4.7 9.2 6.9 9.8 9.9 7 8.5 4.2 9.9 4.8 6.9 2.6 4.7 5.6 4.2Z" fill="#0066CC" data-page-node-id="4ZF3sapD9qNFjWqwsaAfEH"/></svg>
+          <span id="neg-label" data-page-node-id="E0kcsRyy4JHmTOcVZDJNl0">正在撮合时间…</span>
+        </div>
+        <div class="progress-track" data-page-node-id="cdKiDyy4rDXTG9vreT24z1"><div class="progress-fill" id="neg-fill" data-page-node-id="BhqojQHMQq8ee6RFOymlTH"></div></div>
+      </div>
+      <div class="sys-hint" data-page-node-id="yJ63ZrygQ2t5UfkR5TEL6V"><div class="pill" data-page-node-id="2rceYpaUpyn1GXQT7mXg6h">AI 已接手协商，你可以先去忙别的</div></div>
+      <div class="chat" id="chat" data-page-node-id="yyCIj0QL0Jw0B4FEiswWRF"></div>
+      <div class="input-bar" data-page-node-id="K6uyyxCNTBRATE8Gwwzyil">
+        <div class="round-icon" data-page-node-id="hxdSC1Cj8PDxDz2xW5uHvn">
+          <svg width="18" height="18" viewBox="0 0 36 36" data-page-node-id="Gt1qVIg4BfkuTb0qhLiCZK"><rect x="14" y="8" width="8" height="15" rx="4" stroke="#7A7A7A" stroke-width="1.6" data-page-node-id="Eo2FRWc8vlx8ATlOm7f2QW"/><path d="M10.5 16.5c0 4 3.4 7 7.5 7s7.5-3 7.5-7" stroke="#7A7A7A" stroke-width="1.6" stroke-linecap="round" data-page-node-id="buOZ0MspIDhxAnr8300SLv"/><path d="M18 23.5v4" stroke="#7A7A7A" stroke-width="1.6" stroke-linecap="round" data-page-node-id="tMR9PZzL9xF5HRhsPwWYNX"/></svg>
+        </div>
+        <div class="input-field" data-page-node-id="ppXcmy2EjmoxWY7nav1DG9">回复或让 AI 代答…</div>
+        <div class="send-btn" data-page-node-id="uYCt158LDM7PM5qgY0r6PA">
+          <svg width="16" height="16" viewBox="0 0 16 16" data-page-node-id="35rvHitmSrPL05mYAq85ps"><path d="M8 2.5v10M4.5 9 8 12.5 11.5 9" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="p3nVv11QNawyfGeNsDv83T"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 屏幕4 搭局确认 ========== -->
+    <div class="screen" id="scr-confirm" data-page-node-id="FNDafFAnzVj5rwzQHOBwSp">
+      <div class="scroll" data-page-node-id="u30lnkCKviWdRVGtjRTmQG">
+        <div class="nav-head" style="padding-bottom:10px" data-page-node-id="mF543ceXcJ04BD0dYQ68NZ">
+          <svg class="back-arrow" onclick="showScreen('scr-negotiate')" viewBox="0 0 20 20" data-page-node-id="jtevcFRX96v6sazZDceZWN"><path d="M12.5 4 6.5 10l6 6" stroke="#1D1D1F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="4ysmBL8oqeTWyFeyMSJjGR"/></svg>
+          <span class="t" data-page-node-id="m3VLqelv0ZbrLFiFRWVqGF">搭局确认</span>
+          <svg width="20" height="20" viewBox="0 0 20 20" data-page-node-id="SZ7y72puUK17XUZlVHWqlO"><path d="M10 13V3.5M10 3.5 6.5 7M10 3.5 13.5 7" stroke="#1D1D1F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="x2r6PfbQ8o0kzrc1EMKhTH"/><path d="M4 11v4.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V11" stroke="#1D1D1F" stroke-width="1.6" stroke-linecap="round" data-page-node-id="w0UMjfPjWv7wtO7VVKJlIQ"/></svg>
+        </div>
+        <div class="confirm-body" data-page-node-id="rF066gYpmNohny5YhzWx6I">
+          <div class="card plan-card" data-page-node-id="a5bDHFZUEHaLfqpo851DCN">
+            <div class="plan-head" data-page-node-id="xFJCsvtj0EF5carjjmrul0">
+              <h3 data-page-node-id="cnHYufosBWc3C9o6IroRfz">周五羽毛球局</h3>
+              <div class="state-badge" data-page-node-id="68xhMLPvVBgce1ZRT52d9b">待你确认</div>
+            </div>
+            <div class="plan-row" data-page-node-id="7hi9Y0n5yBPZ1srjstuvdw">
+              <svg width="16" height="16" viewBox="0 0 16 16" data-page-node-id="dokU88Nz4c49LQKsHVGP6u"><circle cx="8" cy="8" r="6.4" stroke="#7A7A7A" stroke-width="1.4" data-page-node-id="7JYBfGG6FKxDuWoJj6xWqc"/><path d="M8 4.8V8l2.2 1.6" stroke="#7A7A7A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="ifiwt4NPTEhxR3iOqERcWN"/></svg>
+              <span data-page-node-id="soW0XmUzGKEpbLhMHyyWNZ">9 月 12 日 周五 20:00–22:00</span>
+            </div>
+            <div class="plan-row" data-page-node-id="C4ojoSUlllpXRkEL8CO5q7">
+              <svg width="16" height="16" viewBox="0 0 16 16" data-page-node-id="lcS1PXKTdVFQ2EKZyGdcRo"><path d="M8 14S13 9.7 13 6.5A5 5 0 0 0 3 6.5C3 9.7 8 14 8 14Z" stroke="#7A7A7A" stroke-width="1.4" stroke-linejoin="round" data-page-node-id="31StyxAx6ps755ZS6tnabT"/><circle cx="8" cy="6.5" r="1.8" stroke="#7A7A7A" stroke-width="1.4" data-page-node-id="R9rtJk8UdlaFADCQjA3OlE"/></svg>
+              <span data-page-node-id="FF4JEttORtE2FzfEygycFc">徐汇滨江羽毛球馆 · 3 号场（距你 1.2km）</span>
+            </div>
+            <div class="plan-row" data-page-node-id="2JUPHEVq6u97K3kUM6FAdE">
+              <svg width="16" height="16" viewBox="0 0 16 16" data-page-node-id="heaMQA7cCVexWmxx0M2FPg"><circle cx="6" cy="5" r="2.2" stroke="#7A7A7A" stroke-width="1.3" data-page-node-id="2eDsbudRnaANqixJDBq4Nv"/><path d="M1.8 13c.5-2.2 2.3-3.4 4.2-3.4s3.7 1.2 4.2 3.4" stroke="#7A7A7A" stroke-width="1.3" stroke-linecap="round" data-page-node-id="6deEPnxMaaI6xKdMRsof4f"/><circle cx="11" cy="5.4" r="1.8" stroke="#7A7A7A" stroke-width="1.3" data-page-node-id="reKOlMusp8GC0b6pcLzfO7"/><path d="M11 9.8c1.4 0 2.7.9 3.2 2.7" stroke="#7A7A7A" stroke-width="1.3" stroke-linecap="round" data-page-node-id="3M0cj7uA7AeKIlGPWsKAuk"/></svg>
+              <span data-page-node-id="GHECQ0DozuF3Rg8GS5FR9d">2 人 · 你 + 阿哲（已满员）</span>
+            </div>
+          </div>
+          <div class="card fee-table" data-page-node-id="H1SJo7ydY9RGHxby3ovelY">
+            <div class="th" data-page-node-id="it1riZTrBdy7NKLRbvXEEk"><b data-page-node-id="0SAyWXiClIoDLs2ElLHBcG">费用分摊 · AA</b><span data-page-node-id="BjB6n3FOfDYibBY39pUUa5">AI 已按双方偏好推荐</span></div>
+            <div class="fee-line" data-page-node-id="pPVwOVErGtV31lPWwNT8My"><span class="l" data-page-node-id="m5i2PmL4jtcX2Xr26qZ8sn">场地费 · 2 小时</span><span data-page-node-id="sd7a6gNkM4aR66YcBEGemC">¥84</span></div>
+            <div class="fee-line" data-page-node-id="aBqrPtWNQe7ypXlRpMwXfA"><span class="l" data-page-node-id="9NayzOP9hxsEKey9fBDvon">用球 · 亚士龙 3 桶</span><span data-page-node-id="QEYieoHt157yD3FwQn8TUl">¥45</span></div>
+            <div class="hr" data-page-node-id="IQnsPMVMxR5nB3w1BgEhKu"></div>
+            <div class="fee-line total" data-page-node-id="BN06VWC0EnEg75lPwB5QmW"><span class="l" style="color:var(--ink);font-weight:600" data-page-node-id="Mp8q5kZTSPkX7ZuuB6QC8K">合计</span><span data-page-node-id="atFqY1LcZjL0YID7URF7Ws">¥129</span></div>
+            <div class="fee-line per" data-page-node-id="AyKBNEeaIFJrLoFuCHRiSe"><span class="l" data-page-node-id="HVporEW1ae94WFfEHgoQgi">每人应付（AA）</span><span class="v" data-page-node-id="DdpDEUxhATT9a8T9OD1qGG">¥64.5</span></div>
+          </div>
+          <div class="card people-card" data-page-node-id="bq1EjunCnyDoIZAWq7J3TO">
+            <h3 data-page-node-id="TNypqGQp2pCwsktyFAMCin">参与人 · 确认状态</h3>
+            <div class="p-row" data-page-node-id="emQRnhG8i6UTLKpqOFng10">
+              <div class="avatar av-dark" style="width:40px;height:40px;font-size:14px" data-page-node-id="W4UTGGx7V2MluqqstxsfHP">叶</div>
+              <span class="n" data-page-node-id="JDyUVuj14TQ2UslbSYsSHH">我 · 发起人</span><span class="st" data-page-node-id="z3W6rB1zlT2W3dwjHPAEaE">已确认 ✓</span>
+            </div>
+            <div class="p-row" data-page-node-id="0cY4ScoScAmsax59PmWmgU">
+              <div class="avatar av-blue" style="width:40px;height:40px;font-size:14px" data-page-node-id="YoxVqP9EGDzOwHMDktuTzQ">哲</div>
+              <span class="n" data-page-node-id="huuTabyxwDw0QfK9fBJoFw">阿哲 · 搭子</span><span class="st" data-page-node-id="E0pc9fj8A5ZhOOMqkHm7qA">已确认 ✓</span>
+            </div>
+            <div class="note-line" data-page-node-id="3B6tRBWTKpr43BrDswP7p5">
+              <svg width="14" height="14" viewBox="0 0 14 14" data-page-node-id="ydk92QlGdP5KGHlBD6WvMV"><path d="M7 1.5 12 3.4v3.8c0 3-2.1 4.9-5 5.3-2.9-.4-5-2.3-5-5.3V3.4Z" stroke="#7A7A7A" stroke-width="1.3" stroke-linejoin="round" data-page-node-id="ZTgnlRQUdvQG8nRTwgbt46"/><path d="M4.8 6.8 6.3 8.3l3-3.2" stroke="#7A7A7A" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="DarjSUDgQv2UEPN2BuH2Pu"/></svg>
+              双方确认后自动锁定；爽约将计入信用分
+            </div>
+          </div>
+          <div style="height:20px" data-page-node-id="tqa8eLLeA8dN8J40rjT0G2"></div>
+        </div>
+      </div>
+      <div class="confirm-cta" data-page-node-id="Z5knd9sukvzpqZh5RbphWc">
+        <div class="btn-primary" onclick="lockPlan()" data-page-node-id="qECGneiFHUvKpqNOtnW960">确认方案 · 锁定羽毛球局</div>
+        <div class="btn-ghost" onclick="showScreen('scr-negotiate')" data-page-node-id="MWRNKDaGpB8ax6HDly8YDs">有变动？让 AI 重新协商</div>
+      </div>
+    </div>
+
+    <!-- ========== 屏幕5 我的搭局 ========== -->
+    <div class="screen" id="scr-groups" data-page-node-id="akpfxHbYUlEhk6Mw8VElVo">
+      <div class="me-head" data-page-node-id="gjp4Dt4MK7h6ZLIhTM5IZQ">
+        <h1 data-page-node-id="4rGVFPLjtPjokiLF30SIir">我的搭局</h1>
+        <svg width="20" height="20" viewBox="0 0 20 20" data-page-node-id="6eHLxAkwBcTGlLaoCbDQ00"><rect x="2.5" y="4" width="15" height="13" rx="3" stroke="#1D1D1F" stroke-width="1.5" data-page-node-id="yeefsvxibfk8rsZbDkMOG9"/><path d="M2.5 8.2h15M6.5 2.5v3M13.5 2.5v3" stroke="#1D1D1F" stroke-width="1.5" stroke-linecap="round" data-page-node-id="fryMGXbIlBDQbB0drIGO1e"/><circle cx="7" cy="12" r="1.2" fill="#0066CC" data-page-node-id="sDjjwEZbUyNgLctYR1jcmh"/><circle cx="13" cy="12" r="1.2" fill="#0066CC" data-page-node-id="BzrRzAne9Rb0WER4x6iCid"/></svg>
+      </div>
+      <div class="seg" data-page-node-id="LXUzioU8chm7eZU98XgPbK">
+        <div class="seg-pill" data-page-node-id="N9fq4e4RcEYuzfRUBhnbGH">
+          <div class="seg-item on" data-seg="0" data-page-node-id="FVR2S1IfLVkClJhV63G33P">进行中 1</div>
+          <div class="seg-item" data-seg="1" data-page-node-id="rdQWA5Z65riS8ZJM0Xcz4W">历史 47</div>
+        </div>
+      </div>
+      <div class="scroll" data-page-node-id="AFtZpjZ7C5nE9jJ7q7AfcH">
+        <div class="act-body" id="groups-doing" data-page-node-id="ian8sr4SXnNkDWKAjXqshC">
+          <div class="card ongoing-card" data-page-node-id="qOoJXr8qVJMsXgiFnWzjeQ">
+            <div class="og-head" data-page-node-id="avqhTHpPOOEr5N4N3WVZKS"><h3 data-page-node-id="AGkj1AClD8gAXnnAnTms5L">周五羽毛球局</h3><div class="count-badge" data-page-node-id="mrBgAKhCzSGz3r3YfRGVkw">3 天后</div></div>
+            <div class="og-row" data-page-node-id="zeAiTSxNx5hItCp1Cyl9SN">
+              <svg width="16" height="16" viewBox="0 0 16 16" data-page-node-id="30S6xIVorcb3DwhWA3BKDb"><circle cx="8" cy="8" r="6.4" stroke="#7A7A7A" stroke-width="1.4" data-page-node-id="kd6fFSC9uh1Tj84asYExdc"/><path d="M8 4.8V8l2.2 1.6" stroke="#7A7A7A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="CU5q8gASq2vJyKEUcUbCXo"/></svg>
+              <span data-page-node-id="iFl3HFbcfX29mEg3YklWPV">周五 20:00 · 徐汇滨江羽毛球馆</span>
+            </div>
+            <div class="og-row" data-page-node-id="IuXW0HcX9FCaJNN6cOBXUt">
+              <div class="av-stack" data-page-node-id="vFkX9ovFmcKU36TsV9mfaB">
+                <div class="avatar av-dark" style="width:28px;height:28px;font-size:11px" data-page-node-id="sftrj80XCsgUp2qyKFA6vn">叶</div>
+                <div class="avatar av-blue" style="width:28px;height:28px;font-size:11px" data-page-node-id="i9bZ9y4ftXcPkeamlT93Ie">哲</div>
+              </div>
+              <span data-page-node-id="jdCtq77GhsWOSnZuQa7VMv">我 + 阿哲 · 费用 AA ¥64.5/人</span>
+            </div>
+            <div class="og-btn" onclick="showScreen('scr-confirm')" data-page-node-id="hMqQO1oHSknOehU65Nwftn">进入搭局群</div>
+          </div>
+          <h3 class="list-h" data-page-node-id="ULaKFWJfkMSLAmKfdK9y55">待你确认</h3>
+          <div class="card row-card" data-page-node-id="5jQS5pWwcZHGij5BiJCWDf">
+            <div class="avatar av-warm" style="width:44px;height:44px;font-size:15px" data-page-node-id="ldVBbuLXWAcu12AGPhLTZn">鹿</div>
+            <div class="rc" data-page-node-id="QroYfBPXV601NKDIc0GETl">
+              <div class="rt" data-page-node-id="m3QTz52YUjPErdZ0rV1T85">小鹿 邀你组「上博东馆艺术展」局</div>
+              <div class="rs" data-page-node-id="WupCXBoGaZUqAhmSPAWwT7">AI 建议：周六 14:00 · 轮流请客 · 等你拍板</div>
+            </div>
+            <div class="go-btn" onclick="showScreen('scr-confirm')" data-page-node-id="qdeMu1efshbQ1dmeh8McOi">去确认</div>
+          </div>
+        </div>
+        <div class="act-body" id="groups-history" style="display:none" data-page-node-id="Z3rckG0FVLre809GtWJZqc">
+          <h3 class="list-h" data-page-node-id="ybfMx1bqH73Pa65FSnZQC3">近期完成</h3>
+          <div class="card row-card" data-page-node-id="oIK0gnd9sCokBDYryIU6Pf">
+            <div class="avatar av-green" style="width:44px;height:44px;font-size:15px" data-page-node-id="7XfqmxF9lFS18l8k8BoMKs">山</div>
+            <div class="rc" data-page-node-id="wZ9ecqyVurj66xkbIJZQV7">
+              <div class="rt" data-page-node-id="MGPMhr69l3sJsKrXBHRceg">City Walk · 武康路</div>
+              <div class="rs" data-page-node-id="ldJBbfeLn5aRqeAnYEU4fG">上周日 · 与大山 · AA ¥36/人</div>
+            </div>
+            <div class="rr" data-page-node-id="E5lEYLk0Nr13RbeTMSKXQi">5.0</div>
+          </div>
+          <div class="card row-card" data-page-node-id="EfEY0C1plzjInMrqRmFQzY">
+            <div class="avatar av-blue" style="width:44px;height:44px;font-size:15px" data-page-node-id="GTY9iPTRUIM6sIp6dr2WF2">哲</div>
+            <div class="rc" data-page-node-id="n4JbtyBwvRaFYEtRxbyZlZ">
+              <div class="rt" data-page-node-id="Kmgh1i8W4Has8Q3QHw1NOf">羽毛球 · 静安体育馆</div>
+              <div class="rs" data-page-node-id="6v3xzJhZbSHeqFfdCNjiN4">两周前 · 与阿哲 · AA ¥42/人</div>
+            </div>
+            <div class="rr" data-page-node-id="VcEZxLGzAFOL20EoboMRhd">4.9</div>
+          </div>
+        </div>
+        <div style="height:20px" data-page-node-id="vXY749VGoYzD62MKJwm3Qp"></div>
+      </div>
+      <div class="tabbar" data-page-node-id="behRM5gxQK9HVBDWSv0RAp">
+        <div class="tab-pill" data-page-node-id="6TifToGhesQP8JedfHZJZB">
+          <div class="tab-item" data-tab="discover" data-page-node-id="wt0VPn7LYQE51nn3TGSAJ3">
+            <svg width="18" height="18" viewBox="0 0 18 18" data-page-node-id="5j9tDwUV7TE74skyCboEcB"><circle cx="9" cy="9" r="3.2" fill="#7A7A7A" data-page-node-id="hyX7sBtP2OGKWSjhk7MVxZ"/><path d="M9 1.2v1.6M9 15.2v1.6M1.2 9h1.6M15.2 9h1.6M3.5 3.5l1.1 1.1M13.4 13.4l1.1 1.1M14.5 3.5l-1.1 1.1M4.6 13.4l-1.1 1.1" stroke="#7A7A7A" stroke-width="1.4" stroke-linecap="round" data-page-node-id="jdV6pz0pKfPJqECVu2xaZc"/></svg>
+            <span data-page-node-id="lEDZzT9PGEOEDVafA8mmmX">发现</span>
+          </div>
+          <div class="tab-item active" data-tab="groups" data-page-node-id="q5g47rChrEqPAMFscF7flH">
+            <svg width="18" height="18" viewBox="0 0 18 18" data-page-node-id="KsYTfsk9v6NFajMMbInVjg"><rect x="1.5" y="3" width="15" height="12.5" rx="3" stroke="#7A7A7A" stroke-width="1.5" data-page-node-id="yyfEMkNftfT97R30399Trc"/><path d="M4.5 8.5h4M9.5 11.5h4" stroke="#7A7A7A" stroke-width="1.5" stroke-linecap="round" data-page-node-id="BEXzHO0ZuJLntwrSS3DZlS"/><circle cx="7" cy="12.8" r="2.1" stroke="#7A7A7A" stroke-width="1.5" data-page-node-id="wfroTbLaBiM8QkS60SYgIB"/></svg>
+            <span data-page-node-id="bDJTPzZbPzzu1FmHgLJ2j5">搭局</span>
+          </div>
+          <div class="tab-item" data-tab="chat" data-page-node-id="Yr6Ah67HsSKcuAEyVOxkUx">
+            <svg width="18" height="18" viewBox="0 0 18 18" data-page-node-id="C6vqnFag73VpW1M5rcY6iD"><path d="M9 2.5c-3.9 0-7 2.6-7 5.8 0 1.8 1 3.4 2.6 4.4-.2.9-.7 1.9-1.5 2.7 1.4-.1 2.7-.6 3.7-1.3.7.2 1.4.3 2.2.3 3.9 0 7-2.6 7-5.8s-3.1-6.1-7-6.1Z" stroke="#7A7A7A" stroke-width="1.5" stroke-linejoin="round" data-page-node-id="GAJVOYDa8RCiYzpspPpA7T"/></svg>
+            <span data-page-node-id="V3JxRORaL6YwOSBp81XDv5">消息</span>
+          </div>
+          <div class="tab-item" data-tab="me" data-page-node-id="h9NJ8VHG4LxOJetEqmT3Gj">
+            <svg width="18" height="18" viewBox="0 0 18 18" data-page-node-id="vqZUaVJbDHkON3vZon8Lpf"><circle cx="9" cy="6" r="3" stroke="#7A7A7A" stroke-width="1.5" data-page-node-id="FXlAt9LxXZEpG6xCXX9H3d"/><path d="M2.8 15.5c.7-2.9 3.2-4.5 6.2-4.5s5.5 1.6 6.2 4.5" stroke="#7A7A7A" stroke-width="1.5" stroke-linecap="round" data-page-node-id="TSBfrEtORBetfRCEsofMAB"/></svg>
+            <span data-page-node-id="8so5QBWcPG7xAv9NBTqnry">我的</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 屏幕6 我的 ========== -->
+    <div class="screen" id="scr-me" data-page-node-id="jaH4QUpGKpvVjpOhdUREHR">
+      <div class="scroll" data-page-node-id="lW8NBzkA8JNReG5syeKHD1">
+        <div class="my-head" data-page-node-id="PzbEXnT4lPCHsUj7RVykrL">
+          <h1 data-page-node-id="du2d1nN6nbvr3lWL6WCuIP">我的</h1>
+          <svg width="22" height="22" viewBox="0 0 22 22" data-page-node-id="FDg3spTPnV1FBGUClnhDIc"><circle cx="11" cy="11" r="2.6" stroke="#1D1D1F" stroke-width="1.6" data-page-node-id="5ub13NRZ1VBMuFRLp2hWgG"/><path d="M11 2.2v2.4M11 17.4v2.4M2.2 11h2.4M17.4 11h2.4M4.8 4.8l1.7 1.7M15.5 15.5l1.7 1.7M17.2 4.8l-1.7 1.7M6.5 15.5l-1.7 1.7" stroke="#1D1D1F" stroke-width="1.6" stroke-linecap="round" data-page-node-id="v13ObD3Hx07NJmwN0DG6UG"/></svg>
+        </div>
+        <div class="me-card" data-page-node-id="MqbA9kDgyxCs6KzSFcOk8i">
+          <div class="avatar av-dark" style="width:64px;height:64px;font-size:22px" data-page-node-id="Pke9RSeKl4WCxaM1G2vOMy">叶</div>
+          <div class="me-info" data-page-node-id="pl7VIEkNtJJ7qwDiWXamWz">
+            <h2 data-page-node-id="p0iA8dsbuEot3egZih0Iu2">阿叶</h2>
+            <div class="bio" data-page-node-id="IleDoUJyjNlDl6Y6oWaHxj">羽毛球 / 艺术展 / City Walk</div>
+            <div class="edit-btn" data-page-node-id="BvuS4UyyoHrnKzFFfLAVZC">
+              <svg width="12" height="12" viewBox="0 0 12 12" data-page-node-id="83QVJL7VZDdGU7Cwn5LcFb"><path d="M8.5 1.5 10.5 3.5 4 10H2V8Z" stroke="#7A7A7A" stroke-width="1.2" stroke-linejoin="round" data-page-node-id="qFmBNN7yUlysCeLgtImR9y"/></svg>
+              编辑资料
+            </div>
+          </div>
+        </div>
+        <div class="credit-card" data-page-node-id="D9rZaUhZoYRzycrgAGPhJV">
+          <div class="credit-head" data-page-node-id="OFdSilniCl6yuuW84xDJyH"><b data-page-node-id="NpNUDLdzFKYn0pbbOQ7SV8">搭子信用</b><span class="v" data-page-node-id="kZruedFc0ChqtMYiiv02hm">96</span></div>
+          <div class="credit-track" data-page-node-id="rGdPpXsP80DIKs4MPNFlEW"><div class="credit-fill" data-page-node-id="2aP1to11G73YYoZjAr7v6M"></div></div>
+          <div class="credit-desc" data-page-node-id="sTCYUo8MO0Db44ku4Uo2n3">准时赴约 47 次 · 零爽约 · 超过 98% 的搭子</div>
+        </div>
+        <div class="my-stats" data-page-node-id="op6IBeyKgC8ixDUTWUXwoe">
+          <div class="card my-stat" data-page-node-id="pqp0LWGWBbPRIu1utGg3fo"><b data-page-node-id="sm5fEBLsKMzpD58Z2p25hC">47</b><span data-page-node-id="ZzxBAXGjX4GULKuCZOF46V">累计搭局</span></div>
+          <div class="card my-stat" data-page-node-id="3E14tta8nPchZ6L2sbOqgb"><b data-page-node-id="PrICIwr7Jpk6jX7dWvE0at">23</b><span data-page-node-id="P4g62EzLftmAaJrfG0XvDt">固定搭子</span></div>
+          <div class="card my-stat" data-page-node-id="PMv4zf3nUA90bRBIm4f82t"><b data-page-node-id="kgFIN7YsP44BCSHIVs4JG7">¥58</b><span data-page-node-id="xAzlIFoQe2yCv77lZqbW36">场均消费</span></div>
+        </div>
+        <div class="interest-sec" data-page-node-id="64guxWHF6kwScm8Jt7Uh45">
+          <div class="sect-in" data-page-node-id="QyqJkY1v6heFeWcdmC7ypm">
+            <h3 data-page-node-id="E5D0eGFmtMwiIJBgskxAxF">我的兴趣标签</h3><span class="mg" data-page-node-id="YRNtPwbg9gIRLCibIlr2iJ">管理</span>
+          </div>
+          <div class="tagwrap" data-page-node-id="Xb5GKaXBaqEJsMGYMJXWy8">
+            <div class="tag hl" data-page-node-id="AljZpfGjowuURaE5OqznRD">羽毛球 · 每周</div>
+            <div class="tag hl" data-page-node-id="b5TrwGHTXl9u9fD3OJq1VF">艺术展</div>
+            <div class="tag hl" data-page-node-id="dxDBF4C3suZAhOXQRT8JCQ">City Walk</div>
+            <div class="tag" data-page-node-id="5lLF8yLxX6PRh8DYAN7KHi">手冲咖啡</div>
+            <div class="tag" data-page-node-id="1lt9b8CSDcy5akAhqyROcL">科幻电影</div>
+            <div class="tag add-tag" data-page-node-id="ofpxVlBwtrmE9EDTRZnUHE">
+              <svg width="12" height="12" viewBox="0 0 12 12" data-page-node-id="WppykNmf7rj2E8vCqtWem0"><path d="M6 2.5v7M2.5 6h7" stroke="#7A7A7A" stroke-width="1.5" stroke-linecap="round" data-page-node-id="uFAWAy7ADit9PUbHdfSVCD"/></svg>
+              添加
+            </div>
+          </div>
+        </div>
+        <div style="height:20px" data-page-node-id="FwHk2ZvowFoTNvSzvABFUp"></div>
+      </div>
+      <div class="tabbar" data-page-node-id="zABi3h2xa0dbubZMWCYsYC">
+        <div class="tab-pill" data-page-node-id="WaQBu9Ev1bpIGa3fACzPcy">
+          <div class="tab-item" data-tab="discover" data-page-node-id="E9i95ENWB4XFAlFKZFVbQp">
+            <svg width="18" height="18" viewBox="0 0 18 18" data-page-node-id="l2e1Q5H3M0fz8cF4OjWDj1"><circle cx="9" cy="9" r="3.2" fill="#7A7A7A" data-page-node-id="jl39FZevoEFr9IDtMakljn"/><path d="M9 1.2v1.6M9 15.2v1.6M1.2 9h1.6M15.2 9h1.6M3.5 3.5l1.1 1.1M13.4 13.4l1.1 1.1M14.5 3.5l-1.1 1.1M4.6 13.4l-1.1 1.1" stroke="#7A7A7A" stroke-width="1.4" stroke-linecap="round" data-page-node-id="dCTYvDEbzQjwrVP1BF7Hm9"/></svg>
+            <span data-page-node-id="NdpJtmf2wqsLvhyXx1q5AF">发现</span>
+          </div>
+          <div class="tab-item" data-tab="groups" data-page-node-id="wSQfC2AmYOTzhrPxOhqGaG">
+            <svg width="18" height="18" viewBox="0 0 18 18" data-page-node-id="Gj750HqqRUO7Rtn3fFESIv"><rect x="1.5" y="3" width="15" height="12.5" rx="3" stroke="#7A7A7A" stroke-width="1.5" data-page-node-id="jmPoQjn3CsOcBKkGCjvGxU"/><path d="M4.5 8.5h4M9.5 11.5h4" stroke="#7A7A7A" stroke-width="1.5" stroke-linecap="round" data-page-node-id="CML0tqRmIl0PK0MDbMD2Di"/><circle cx="7" cy="12.8" r="2.1" stroke="#7A7A7A" stroke-width="1.5" data-page-node-id="L3l4iRnAccxwC3ZmKyxXDA"/></svg>
+            <span data-page-node-id="J2YX5uTu82kCXT5Wxp670D">搭局</span>
+          </div>
+          <div class="tab-item" data-tab="chat" data-page-node-id="XNhkBEE8sZOtmCER4t7dtb">
+            <svg width="18" height="18" viewBox="0 0 18 18" data-page-node-id="lcaGarnCQJ6GiwwCm1Hd9V"><path d="M9 2.5c-3.9 0-7 2.6-7 5.8 0 1.8 1 3.4 2.6 4.4-.2.9-.7 1.9-1.5 2.7 1.4-.1 2.7-.6 3.7-1.3.7.2 1.4.3 2.2.3 3.9 0 7-2.6 7-5.8s-3.1-6.1-7-6.1Z" stroke="#7A7A7A" stroke-width="1.5" stroke-linejoin="round" data-page-node-id="nuNFeDENHf12kFTBKLdE2W"/></svg>
+            <span data-page-node-id="gDxtH4czD7DV5BmzWNsZDA">消息</span>
+          </div>
+          <div class="tab-item active" data-tab="me" data-page-node-id="t3S7we4vTMMG5NiGqpGto6">
+            <svg width="18" height="18" viewBox="0 0 18 18" data-page-node-id="rW2Lbw2CJEO8DNJZKvUj7u"><circle cx="9" cy="6" r="3" stroke="#7A7A7A" stroke-width="1.5" data-page-node-id="rNiBhBGHJGcZfX6bkj0Psr"/><path d="M2.8 15.5c.7-2.9 3.2-4.5 6.2-4.5s5.5 1.6 6.2 4.5" stroke="#7A7A7A" stroke-width="1.5" stroke-linecap="round" data-page-node-id="16p6nOs7NToUz2jYRbJVAK"/></svg>
+            <span data-page-node-id="3Gkcpeqh9hQdu13qtCj8BG">我的</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" data-page-node-id="Jc1GD3lIMhPgXsl6FOenhW"></div>
+  </div>
+
+  <!-- 演示控制条 -->
+  <div class="demo-bar" data-page-node-id="0wCz41g5AUPjBVVgSwz0Ok">
+    <div class="dots" id="dots" data-page-node-id="t4N4alUhald94TROSOaLHE"></div>
+    <span class="demo-label" id="demo-label" data-page-node-id="jcvAw0fXzZASUMJSPRHVzm">01 · 发现</span>
+    <button class="replay-btn" onclick="replayNegotiation()" data-page-node-id="8bFC7MD6T9XkwToZkyoCcH">
+      <svg width="12" height="12" viewBox="0 0 14 14" data-page-node-id="JNlNwjvCmQ9FQnoZ4P6D67"><path d="M2.5 7a4.5 4.5 0 1 1 1.3 3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" data-page-node-id="39T09lGdZWEncSJVLaklk7"/><path d="M2.3 7.6 2.5 7a4.5 4.5 0 0 1 .8-1.4l.7 2.1Z" fill="currentColor" data-page-node-id="fAKnvC5HNUD0JadiWYreNp"/></svg>
+      重播 AI 协商
+    </button>
+    <span class="kbd-hint" data-page-node-id="EAHRod4363RXn32ENvTPNn"><b data-page-node-id="qSuiBEkK6iEtKZ8gjnafqq">←</b> <b data-page-node-id="cWOM8VJ8nq7M4jyvQVMxcH">→</b> 切换屏幕</span>
+  </div>
+</div>
+
+<script>
+/* ============ 数据 ============ */
+const RECOMMENDS = [
+  {name:'阿哲', age:28, match:92, av:'av-blue', ch:'哲',
+   reason:'同款球拍 · 今晚 8 点有空 · 偏好 AA', dist:'1.2km · 徐汇滨江', active:'刚活跃'},
+  {name:'小鹿', age:26, match:88, av:'av-warm', ch:'鹿',
+   reason:'都想去上博东馆 · 周末同行 · 可轮流请客', dist:'2.8km · 静安寺', active:'1 小时前活跃'},
+  {name:'大山', age:31, match:85, av:'av-green', ch:'山',
+   reason:'周末想徒步 · 4 条路线想法 · 费用你定', dist:'3.5km · 中山公园', active:'今天活跃'},
+];
+const SCREENS = ['scr-discover','scr-profile','scr-negotiate','scr-confirm','scr-groups','scr-me'];
+const SCREEN_NAMES = ['01 · 发现','02 · 搭子主页','03 · AI 协商','04 · 搭局确认','05 · 我的搭局','06 · 我的'];
+
+/* ============ 渲染发现列表 ============ */
+function renderRecs(){
+  const list = document.getElementById('rec-list');
+  list.innerHTML = RECOMMENDS.map(r=>`
+    <div class="card rec-card" onclick="goProfile()">
+      <div class="avatar ${r.av}" style="width:64px;height:64px;font-size:21px">${r.ch}</div>
+      <div class="rec-body">
+        <div class="rec-name">
+          <div class="n"><span class="nm">${r.name}</span><span class="age">${r.age}</span></div>
+          <span class="match">${r.match}%</span>
+        </div>
+        <div class="ai-reason">
+          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 1.2 7.2 3.6 9.8 4 7.9 5.9 8.4 8.6 6 7.3 3.6 8.6 4.1 5.9 2.2 4 4.8 3.6Z" fill="#0066CC"/></svg>
+          <span>${r.reason}</span>
+        </div>
+        <div class="rec-meta">
+          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 10.8s3.8-3.5 3.8-6.2A3.8 3.8 0 0 0 2.2 4.6c0 2.7 3.8 6.2 3.8 6.2Z" stroke="#7A7A7A" stroke-width="1.2"/><circle cx="6" cy="4.5" r="1.5" stroke="#7A7A7A" stroke-width="1.2"/></svg>
+          <span>${r.dist}</span><span>·</span><span>${r.active}</span>
+        </div>
+      </div>
+    </div>
+  `).join('') + '<div style="height:16px"></div>';
+}
+
+/* ============ 开屏 ============ */
+function startDemo(){
+  document.getElementById('cover').classList.add('hide');
+}
+
+/* ============ 屏幕路由 ============ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const idx = SCREENS.indexOf(id);
+  if(idx >= 0) setDots(idx);
+  if(id==='scr-negotiate') startNegotiation();
+}
+function goProfile(){ showScreen('scr-profile'); }
+function goNegotiate(){ showScreen('scr-negotiate'); }
+function replayNegotiation(){ showScreen('scr-negotiate'); }
+
+/* ============ 演示控制条 ============ */
+function initDots(){
+  const wrap = document.getElementById('dots');
+  SCREENS.forEach((s,i)=>{
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===0?' on':'');
+    d.title = SCREEN_NAMES[i];
+    d.onclick = ()=>showScreen(s);
+    wrap.appendChild(d);
+  });
+}
+function setDots(idx){
+  document.querySelectorAll('#dots .dot').forEach((d,i)=>d.classList.toggle('on', i===idx));
+  document.getElementById('demo-label').textContent = SCREEN_NAMES[idx];
+}
+
+/* 键盘翻页 */
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowRight' || e.key==='ArrowLeft'){
+    const cur = document.querySelector('.screen.active');
+    let idx = SCREENS.indexOf(cur.id);
+    idx = e.key==='ArrowRight' ? Math.min(idx+1, SCREENS.length-1) : Math.max(idx-1, 0);
+    showScreen(SCREENS[idx]);
+  }
+});
+
+/* Tab 切换 */
+document.querySelectorAll('.tab-item').forEach(t=>{
+  t.addEventListener('click',()=>{
+    const map = {discover:'scr-discover', groups:'scr-groups', chat:'scr-negotiate', me:'scr-me'};
+    showScreen(map[t.dataset.tab]);
+  });
+});
+
+/* 兴趣标签切换 */
+document.querySelectorAll('#chip-bar .chip').forEach(c=>{
+  c.addEventListener('click',()=>{
+    document.querySelectorAll('#chip-bar .chip').forEach(x=>x.classList.remove('on'));
+    c.classList.add('on');
+  });
+});
+
+/* 费用偏好切换 */
+document.querySelectorAll('[data-fee]').forEach(f=>{
+  f.addEventListener('click',()=>{
+    f.parentElement.querySelectorAll('.fee-opt').forEach(x=>x.classList.remove('on'));
+    f.classList.add('on');
+  });
+});
+
+/* 分段控件 */
+document.querySelectorAll('.seg-item').forEach(s=>{
+  s.addEventListener('click',()=>{
+    s.parentElement.querySelectorAll('.seg-item').forEach(x=>x.classList.remove('on'));
+    s.classList.add('on');
+    document.getElementById('groups-doing').style.display = s.dataset.seg==='0'?'flex':'none';
+    document.getElementById('groups-history').style.display = s.dataset.seg==='1'?'flex':'none';
+  });
+});
+
+/* ============ Toast ============ */
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+/* ============ AI 协商动画 ============ */
+const AI_ICON = '<svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 1.2 7.2 3.6 9.8 4 7.9 5.9 8.4 8.6 6 7.3 3.6 8.6 4.1 5.9 2.2 4 4.8 3.6Z" fill="#0066CC"/></svg>';
+let negTimers = [];
+function startNegotiation(){
+  negTimers.forEach(clearTimeout); negTimers = [];
+  const chat = document.getElementById('chat');
+  const fill = document.getElementById('neg-fill');
+  const label = document.getElementById('neg-label');
+  chat.innerHTML = ''; fill.style.width = '0';
+  const scrollBottom = ()=>chat.scrollTo({top:chat.scrollHeight, behavior:'smooth'});
+  const T = (fn, ms)=>negTimers.push(setTimeout(fn, ms));
+
+  T(()=>{
+    label.textContent = '正在撮合时间…';
+    fill.style.width = '33%';
+    chat.insertAdjacentHTML('beforeend', `
+      <div class="msg ai"><div class="mh">${AI_ICON}<span>搭趣 AI</span></div>
+      <div class="typing"><i></i><i></i><i></i></div></div>`);
+    scrollBottom();
+  }, 200);
+
+  T(()=>{
+    chat.lastElementChild.remove();
+    chat.insertAdjacentHTML('beforeend', `
+      <div class="msg dark">
+        <div class="mh"><span>已协商完成 · 2 项</span></div>
+        <div class="kv"><span class="k">时间</span><span class="v">本周五 20:00–22:00</span></div>
+        <div class="kv"><span class="k">项目</span><span class="v">羽毛球 · 滨江馆 3 号场</span></div>
+      </div>`);
+    scrollBottom();
+  }, 1600);
+
+  T(()=>{
+    label.textContent = '费用分摊方式确认中 · 3/3 步';
+    fill.style.width = '66%';
+    chat.insertAdjacentHTML('beforeend', `
+      <div class="msg ai">
+        <div class="mh">${AI_ICON}<span>搭趣 AI · 刚刚</span></div>
+        <div class="mb">已为你们锁定本周五 20:00–22:00，徐汇滨江羽毛球馆 3 号场（人均 ¥42）。还差最后一步——费用怎么分？</div>
+        <div class="opt-list">
+          <div class="opt on" onclick="pickOpt(this)"><span>AA 分摊 · 每人 ¥42</span><div class="ck"></div></div>
+          <div class="opt" onclick="pickOpt(this)"><span>轮流请客 · 这次他请</span><div class="ck"></div></div>
+        </div>
+      </div>`);
+    scrollBottom();
+  }, 3000);
+
+  T(()=>{
+    chat.insertAdjacentHTML('beforeend', `
+      <div class="msg me"><div class="mb">就 AA，确认吧！</div></div>`);
+    scrollBottom();
+  }, 4600);
+
+  T(()=>{
+    label.textContent = '方案已生成 ✓';
+    fill.style.width = '100%';
+    chat.insertAdjacentHTML('beforeend', `
+      <div class="msg ai done">
+        <div class="mh">${AI_ICON}<span>方案已生成</span></div>
+        <div class="mb">好耶！方案已按你们的习惯生成，阿哲那边也点头了。<b style="color:var(--primary);cursor:pointer" onclick="showScreen('scr-confirm')">去确认页锁单 →</b></div>
+      </div>`);
+    scrollBottom();
+  }, 5800);
+}
+
+function pickOpt(el){
+  el.parentElement.querySelectorAll('.opt').forEach(o=>o.classList.remove('on'));
+  el.classList.add('on');
+}
+
+/* ============ 锁单 ============ */
+function lockPlan(){
+  toast('羽毛球局已锁定 · 周五见！');
+  setTimeout(()=>showScreen('scr-groups'), 900);
+}
+
+initDots();
+renderRecs();
+</script>
+</body>
+</html>
